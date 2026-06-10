@@ -152,13 +152,54 @@ const SEED = [
   mkSpot(57, "Yeast Side",               "Island-wide",           "Café",          "multiple",   "https://instagram.com/yeastsidesg"),
 ];
 
-// ── SUPABASE CLIENT ───────────────────────────────────────────────────────────
-import { createClient } from '@supabase/supabase-js'
-const _supabase = createClient(
-  'https://cpefjwjyxgmdwjrfirda.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwZWZqd2p5eGdtZHdqcmZpcmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjIwNTUsImV4cCI6MjA5NjU5ODA1NX0.a0wLpyBfUhaj3KR5MBjlForRcxfxHIrKmuEEQUPL20w'
-);
-function getSupabase(){ return _supabase; }
+// ── SUPABASE REST CLIENT (direct fetch, no SDK) ───────────────────────────────
+const SB_URL = 'https://cpefjwjyxgmdwjrfirda.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwZWZqd2p5eGdtZHdqcmZpcmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjIwNTUsImV4cCI6MjA5NjU5ODA1NX0.a0wLpyBfUhaj3KR5MBjlForRcxfxHIrKmuEEQUPL20w';
+const SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation',
+};
+
+const sbDb = {
+  async select(table, query='') {
+    const res = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
+      headers: SB_HEADERS,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async insert(table, data) {
+    const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: SB_HEADERS,
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async update(table, data, match) {
+    const query = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
+    const res = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
+      method: 'PATCH',
+      headers: SB_HEADERS,
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async rpc(fn, params) {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: SB_HEADERS,
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+function getSupabase(){ return sbDb; }
 
 
 // ── SESSION ID (anonymous, persists per device) ───────────────────────────
@@ -873,9 +914,10 @@ export default function MBBA(){
         vegan:s.vegan||false,dairy_free:s.dairyFree||false,
         wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
       }));
-      const {data,error}=await db.from('spots').insert(batch).select();
-      if(!error&&data)inserted.push(...data);
-      else console.error('Batch error:',error?.message);
+      try{
+        const rows = await db.insert('spots', batch);
+        if(rows) inserted.push(...(Array.isArray(rows)?rows:[rows]));
+      }catch(e){ console.error('Batch error:',e.message); }
     }
     if(inserted.length>0){
       const mapped=inserted.map(s=>({
@@ -897,12 +939,8 @@ export default function MBBA(){
   const [weeklyWinner,setWeeklyWinner]=useState(null);
   useEffect(()=>{
     async function loadWinner(){
-      const {data}=await getSupabase()
-        .from('weekly_winners')
-        .select('*,spots(name,loc,cat)')
-        .eq('active',true)
-        .single();
-      if(data) setWeeklyWinner(data);
+      const rows=await getSupabase().select('weekly_winners','select=*,spots(name,loc,cat)&active=eq.true&limit=1').catch(()=>null);
+      if(rows&&rows[0]) setWeeklyWinner(rows[0]);
     }
     loadWinner();
   },[]);
