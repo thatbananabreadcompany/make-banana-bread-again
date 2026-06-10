@@ -152,12 +152,26 @@ const SEED = [
   mkSpot(57, "Yeast Side",               "Island-wide",           "Café",          "multiple",   "https://instagram.com/yeastsidesg"),
 ];
 
-// ── SUPABASE CLIENT (replace with real values after setup) ──────────────────
-// import { createClient } from '@supabase/supabase-js'
-// const supabase = createClient(
-//   import.meta.env.VITE_SUPABASE_URL,
-//   import.meta.env.VITE_SUPABASE_ANON_KEY
-// )
+// ── SUPABASE CLIENT ───────────────────────────────────────────────────────────
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+
+// ── SESSION ID (anonymous, persists per device) ───────────────────────────
+function getSessionId(){
+  try{
+    let id=localStorage.getItem('mbba_session');
+    if(!id){
+      id='s_'+Math.random().toString(36).slice(2)+Date.now().toString(36);
+      localStorage.setItem('mbba_session',id);
+    }
+    return id;
+  }catch{return 'anonymous';}
+}
+const SESSION_ID=getSessionId();
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function calcElo(w,l){const n=w+l;if(!n)return 1000;return Math.round(1000+(w-l)*32);}
@@ -746,7 +760,7 @@ function SpotCard({spot,onRate,onFlag,onEdit}){
 
 // ── MAIN ─────────────────────────────────────────────────────────────────
 export default function MBBA(){
-  const [spots,setSpots]     = useState(SEED);
+  const [spots,setSpots]     = useState([]);
   const [isLoading,setIsLoading] = useState(false);
   const [dbError,setDbError]   = useState(null);
   const [section,setSection] = useState("battle");
@@ -796,6 +810,90 @@ export default function MBBA(){
   const [dupWarn,setDupWarn]=useState(null);
 
   useOGMeta();
+  // ── LOAD SPOTS FROM SUPABASE ──────────────────────────────────────────────
+  useEffect(()=>{
+    async function loadSpots(){
+      setIsLoading(true);
+      try{
+        const {data,error}=await supabase
+          .from('spots')
+          .select('*')
+          .order('name',{ascending:true});
+        if(error) throw error;
+        if(data&&data.length>0){
+          // Map DB columns to app shape
+          const mapped=data.map(s=>({
+            id:s.id,
+            name:s.name,
+            loc:s.loc,
+            cat:s.cat,
+            outlets:s.outlets||'single',
+            url:s.url||'',
+            halal:s.halal||false,
+            muslimOwned:s.muslim_owned||false,
+            vegan:s.vegan||false,
+            dairyFree:s.dairy_free||false,
+            wins:s.wins||0,
+            losses:s.losses||0,
+            weeklyWins:s.weekly_wins||0,
+            stars:s.star_count>0?Array(s.star_count).fill(s.stars_total/s.star_count):[],
+            tags:{},
+            addedAt:new Date(s.added_at).getTime(),
+            flagged:s.flagged||false,
+          }));
+          setSpots(mapped);
+          setPair(randPair(mapped));
+        } else {
+          // First run — seed the database with SEED data
+          await seedDatabase();
+        }
+      }catch(err){
+        console.error('Failed to load spots:',err);
+        setDbError('Having trouble connecting. Showing local data.');
+        setSpots(SEED);
+        setPair(randPair(SEED));
+      }
+      setIsLoading(false);
+    }
+    loadSpots();
+  },[]);
+
+  async function seedDatabase(){
+    const rows=SEED.map(s=>({
+      name:s.name,loc:s.loc,cat:s.cat,outlets:s.outlets,
+      url:s.url||'',halal:s.halal||false,muslim_owned:s.muslimOwned||false,
+      vegan:s.vegan||false,dairy_free:s.dairyFree||false,
+      wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
+    }));
+    const {data,error}=await supabase.from('spots').insert(rows).select();
+    if(!error&&data){
+      const mapped=data.map(s=>({
+        id:s.id,name:s.name,loc:s.loc,cat:s.cat,
+        outlets:s.outlets||'single',url:s.url||'',
+        halal:s.halal||false,muslimOwned:s.muslim_owned||false,
+        vegan:s.vegan||false,dairyFree:s.dairy_free||false,
+        wins:0,losses:0,weeklyWins:0,stars:[],tags:{},
+        addedAt:new Date(s.added_at).getTime(),flagged:false,
+      }));
+      setSpots(mapped);
+      setPair(randPair(mapped));
+    }
+  }
+
+  // ── LOAD WEEKLY WINNER ────────────────────────────────────────────────────
+  const [weeklyWinner,setWeeklyWinner]=useState(null);
+  useEffect(()=>{
+    async function loadWinner(){
+      const {data}=await supabase
+        .from('weekly_winners')
+        .select('*,spots(name,loc,cat)')
+        .eq('active',true)
+        .single();
+      if(data) setWeeklyWinner(data);
+    }
+    loadWinner();
+  },[]);
+
   const nav=[{key:"battle",label:"Battle"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
   const showToast=useCallback((msg)=>{setToast(msg);setTimeout(()=>setToast(null),2000);},[]);
 
@@ -809,15 +907,26 @@ export default function MBBA(){
   const vote=useCallback((winner,loserSpot)=>{
     if(chosen)return;
     setChosen(winner.id);setLoser(loserSpot.id);setSV(v=>{
-    const next=v+1;
-    try{localStorage.setItem('mbba_votes',String(next));}catch{}
-    return next;
-  });
+      const next=v+1;
+      try{localStorage.setItem('mbba_votes',String(next));}catch{}
+      return next;
+    });
+    // Optimistic UI update
     setSpots(prev=>prev.map(s=>{
       if(s.id===winner.id)return{...s,wins:s.wins+1,weeklyWins:(s.weeklyWins||0)+1};
       if(s.id===loserSpot.id)return{...s,losses:s.losses+1};
       return s;
     }));
+    // Write to Supabase
+    Promise.all([
+      supabase.rpc('increment_wins',{spot_id:winner.id}),
+      supabase.rpc('increment_losses',{spot_id:loserSpot.id}),
+      supabase.from('votes').insert({
+        winner_id:winner.id,
+        loser_id:loserSpot.id,
+        session_id:SESSION_ID,
+      }),
+    ]).catch(err=>console.error('Vote write error:',err));
     setTimeout(()=>{
       setSpots(prev=>{setPair(randPair(prev));return prev;});
       setChosen(null);setLoser(null);setBattles(b=>b+1);
@@ -826,17 +935,48 @@ export default function MBBA(){
   },[chosen,battles]);
 
   const submitReview=useCallback((spotId,stars,tags)=>{
+    // Optimistic update
     setSpots(prev=>prev.map(s=>{
       if(s.id!==spotId)return s;
       const t={...s.tags};
       Object.keys(tags).forEach(k=>{const tag=k.split(":")[1];t[tag]=(t[tag]||0)+1;});
       return{...s,stars:[...s.stars,stars],tags:t};
     }));
+    // Write to Supabase
+    const tagList=Object.keys(tags).map(k=>k.split(":")[1]);
+    supabase.from('reviews').insert({
+      spot_id:spotId,
+      stars,
+      tags:tagList,
+      session_id:SESSION_ID,
+    }).then(async()=>{
+      // Update spot star average
+      const {data}=await supabase
+        .from('reviews')
+        .select('stars')
+        .eq('spot_id',spotId);
+      if(data&&data.length){
+        const avg=data.reduce((a,b)=>a+b.stars,0)/data.length;
+        await supabase.from('spots').update({
+          stars_total:avg*data.length,
+          star_count:data.length,
+        }).eq('id',spotId);
+      }
+    }).catch(err=>console.error('Review write error:',err));
     showToast("Review added");
   },[showToast]);
 
   const submitEdit=useCallback((spotId,data)=>{
     setSpots(prev=>prev.map(s=>s.id===spotId?{...s,...data}:s));
+    // Write to Supabase (pending review)
+    supabase.from('spots').update({
+      url:data.url||'',
+      loc:data.loc||'',
+      halal:data.halal||false,
+      muslim_owned:data.muslimOwned||false,
+      vegan:data.vegan||false,
+      dairy_free:data.dairyFree||false,
+    }).eq('id',spotId).catch(err=>console.error('Edit write error:',err));
     showToast("Edit applied. Thanks!");
   },[showToast]);
 
@@ -844,6 +984,13 @@ export default function MBBA(){
     setSpots(prev=>prev.map(s=>s.id===spotId?{...s,flagged:true}:s));
     showToast("Flagged. We will review it.");
     const spot=spots.find(s=>s.id===spotId);
+    // Write flag to Supabase
+    supabase.from('flags').insert({
+      spot_id:spotId,
+      reason,
+      other_text:otherText||'',
+    }).catch(err=>console.error('Flag write error:',err));
+    // Send email notification
     fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({type:"flag",spotName:spot?.name||"Unknown",spotLoc:spot?.loc||"",reason,otherText:otherText||""})
     }).catch(()=>{});
@@ -862,10 +1009,30 @@ export default function MBBA(){
     const s=mkSpot(Date.now(),nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
     setFormErr("");setDupWarn(null);
     setSpots(prev=>{const u=[...prev,s];setPair(randPair(u));return u;});
+    const newSpotData={
+      name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets:nOut,url:nUrl.trim(),
+      halal:nHalal,muslim_owned:nMuslim,vegan:nVegan,dairy_free:nDairy,
+      wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
+    };
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
     setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
     showToast("Added to the battle");setSection("battle");
-    // Notify via Resend
+    // Write to Supabase
+    supabase.from('spots').insert(newSpotData).select().then(({data,error})=>{
+      if(!error&&data&&data[0]){
+        const s=data[0];
+        const mapped={
+          id:s.id,name:s.name,loc:s.loc,cat:s.cat,
+          outlets:s.outlets||'single',url:s.url||'',
+          halal:s.halal||false,muslimOwned:s.muslim_owned||false,
+          vegan:s.vegan||false,dairyFree:s.dairy_free||false,
+          wins:0,losses:0,weeklyWins:0,stars:[],tags:{},
+          addedAt:new Date(s.added_at).getTime(),flagged:false,
+        };
+        setSpots(prev=>{const u=[...prev,mapped];setPair(randPair(u));return u;});
+      }
+    }).catch(err=>console.error('Add spot error:',err));
+    // Email notification
     fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets:nOut,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy})
     }).catch(()=>{});
@@ -968,6 +1135,14 @@ export default function MBBA(){
 
       {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:T.black,color:T.white,padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:500,zIndex:400,whiteSpace:"nowrap",animation:"toastIn 0.22s ease",pointerEvents:"none"}}>{toast}</div>}
 
+      {/* LOADING SCREEN */}
+      {isLoading&&spots.length===0&&(
+        <div style={{position:"fixed",inset:0,background:T.white,zIndex:500,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+          <span style={{fontSize:48}}>🍌</span>
+          <p style={{fontSize:14,color:T.muted,fontFamily:T.font}}>Loading the directory…</p>
+        </div>
+      )}
+
       {/* DB ERROR BANNER */}
       {dbError&&(
         <div style={{background:"#FFF0F0",borderBottom:`1px solid #FFD0D0`,padding:"10px 20px",textAlign:"center",fontSize:13,color:T.red}}>
@@ -1005,15 +1180,36 @@ export default function MBBA(){
               <p style={{fontSize:14,color:T.muted}}>{spots.length} spots · {totalVotes} votes cast</p>
             </div>
 
-            {/* BOTW teaser */}
-            <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-              <div>
-                <p style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8960C",marginBottom:4}}>Banana Bread of the Week</p>
-                <p style={{fontSize:14,fontWeight:600,color:"#FFE135",marginBottom:2}}>Launching soon.</p>
-                <p style={{fontSize:11,color:"rgba(255,225,53,0.5)"}}>Votes close Sat 11:59pm · Winner announced Sun 12pm SGT</p>
+            {/* BOTW banner — live winner or teaser */}
+            {weeklyWinner?(
+              <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,border:"1.5px solid #C8960C"}}>
+                <p style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8960C",marginBottom:6}}>🏆 Banana Bread of the Week</p>
+                <p style={{fontSize:18,fontWeight:700,color:"#FFE135",marginBottom:2}}>{weeklyWinner.spots?.name||"This week's winner"}</p>
+                <p style={{fontSize:12,color:"rgba(255,225,53,0.6)",marginBottom:10}}>📍 {weeklyWinner.spots?.loc}</p>
+                {weeklyWinner.discount_code&&(
+                  <div style={{background:"rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+                    <div>
+                      <p style={{fontSize:12,color:"rgba(255,225,53,0.7)",marginBottom:2}}>{weeklyWinner.discount_desc}</p>
+                      <p style={{fontFamily:"'Courier New',monospace",fontSize:16,fontWeight:700,color:"#FFE135",letterSpacing:"0.1em"}}>{weeklyWinner.discount_code}</p>
+                    </div>
+                    <button onClick={()=>{try{navigator.clipboard.writeText(weeklyWinner.discount_code);}catch{}showToast("Code copied!");}}
+                      style={{background:"#FFE135",border:"none",borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:T.font,color:"#1A0800",flexShrink:0}}>
+                      Copy
+                    </button>
+                  </div>
+                )}
+                <p style={{fontSize:10,color:"rgba(255,225,53,0.3)",marginTop:8}}>Votes close Sat 11:59pm · Winner announced Sun 12pm SGT</p>
               </div>
-              <span style={{fontSize:28,flexShrink:0}}>🏆</span>
-            </div>
+            ):(
+              <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+                <div>
+                  <p style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8960C",marginBottom:4}}>Banana Bread of the Week</p>
+                  <p style={{fontSize:14,fontWeight:600,color:"#FFE135",marginBottom:2}}>Launching soon.</p>
+                  <p style={{fontSize:11,color:"rgba(255,225,53,0.5)"}}>Votes close Sat 11:59pm · Winner announced Sun 12pm SGT</p>
+                </div>
+                <span style={{fontSize:28,flexShrink:0}}>🏆</span>
+              </div>
+            )}
 
             {/* Tier strip */}
             {sessionVotes>0&&(
