@@ -974,13 +974,18 @@ export default function MBBA(){
       if(s.id===loserSpot.id)return{...s,losses:s.losses+1};
       return s;
     }));
-    // Write to Supabase — direct update, no RPC needed
+    // Write to Supabase — fetch current value then increment to avoid race conditions
     const db=getSupabase();
-    const wSpot=spots.find(s=>s.id===winner.id);
-    const lSpot=spots.find(s=>s.id===loserSpot.id);
-    if(wSpot) db.update('spots',{wins:wSpot.wins+1,weekly_wins:(wSpot.weeklyWins||0)+1},{id:winner.id}).catch(()=>{});
-    if(lSpot) db.update('spots',{losses:lSpot.losses+1},{id:loserSpot.id}).catch(()=>{});
-    db.insert('votes',{winner_id:winner.id,loser_id:loserSpot.id,session_id:SESSION_ID}).catch(()=>{});
+    const wid=winner.id, lid=loserSpot.id;
+    Promise.all([
+      db.select('spots',`select=id,wins,weekly_wins&id=eq.${wid}`),
+      db.select('spots',`select=id,losses&id=eq.${lid}`),
+    ]).then(([wRows,lRows])=>{
+      const w=wRows&&wRows[0], l=lRows&&lRows[0];
+      if(w) db.update('spots',{wins:(w.wins||0)+1,weekly_wins:(w.weekly_wins||0)+1},{id:wid}).catch(()=>{});
+      if(l) db.update('spots',{losses:(l.losses||0)+1},{id:lid}).catch(()=>{});
+    }).catch(()=>{});
+    db.insert('votes',{winner_id:wid,loser_id:lid,session_id:SESSION_ID}).catch(()=>{});
     // Always advance regardless of DB result
     setTimeout(()=>{
       setChosen(null);
@@ -1116,7 +1121,14 @@ export default function MBBA(){
     setFbSending(false);
   },[fbName,fbEmail,fbType,fbMsg]);
 
-  const ranked=useMemo(()=>[...spots].sort((a,b)=>calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses)),[spots]);
+  const ranked=useMemo(()=>[...spots].sort((a,b)=>{
+    const aVotes=a.wins+a.losses, bVotes=b.wins+b.losses;
+    // Unvoted spots go to bottom
+    if(aVotes===0&&bVotes===0) return a.name.localeCompare(b.name);
+    if(aVotes===0) return 1;
+    if(bVotes===0) return -1;
+    return calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses);
+  }),[spots]);
 
 
   const filterFn=useCallback((list)=>list.filter(s=>{
