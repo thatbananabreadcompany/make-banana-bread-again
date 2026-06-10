@@ -154,10 +154,16 @@ const SEED = [
 
 // ── SUPABASE CLIENT ───────────────────────────────────────────────────────────
 import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
+// Client initialized lazily to avoid undefined env vars at module load time
+let _supabase = null;
+function getSupabase(){
+  if(!_supabase){
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if(url && key) _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
 
 // ── SESSION ID (anonymous, persists per device) ───────────────────────────
@@ -814,24 +820,15 @@ export default function MBBA(){
   useEffect(()=>{
     async function loadSpots(){
       setIsLoading(true);
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if(!url||!key){
-        setDbError('ENV MISSING: URL=' + (url?'ok':'missing') + ' KEY=' + (key?'ok':'missing'));
+      const sbUrl = import.meta.env.VITE_SUPABASE_URL;
+      const sbKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if(!sbUrl || sbUrl==='undefined' || !sbKey || sbKey==='undefined'){
+        setDbError('ENV MISSING — check Vercel environment variables.');
         setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
       }
-      // Raw fetch test before using supabase client
-      try{
-        const testRes = await fetch(url+'/rest/v1/spots?select=id&limit=1',{
-          headers:{'apikey':key,'Authorization':'Bearer '+key}
-        });
-        if(!testRes.ok){
-          const txt = await testRes.text();
-          setDbError('HTTP '+testRes.status+': '+txt.slice(0,120));
-          setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
-        }
-      }catch(fetchErr){
-        setDbError('Fetch failed: '+fetchErr.message);
+      const db = getSupabase();
+      if(!db){
+        setDbError('Supabase client failed to initialise.');
         setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
       }
       try{
@@ -887,7 +884,7 @@ export default function MBBA(){
       vegan:s.vegan||false,dairy_free:s.dairyFree||false,
       wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
     }));
-    const {data,error}=await supabase.from('spots').insert(rows).select();
+    const {data,error}=await getSupabase().from('spots').insert(rows).select();
     if(!error&&data){
       const mapped=data.map(s=>({
         id:s.id,name:s.name,loc:s.loc,cat:s.cat,
@@ -906,7 +903,7 @@ export default function MBBA(){
   const [weeklyWinner,setWeeklyWinner]=useState(null);
   useEffect(()=>{
     async function loadWinner(){
-      const {data}=await supabase
+      const {data}=await getSupabase()
         .from('weekly_winners')
         .select('*,spots(name,loc,cat)')
         .eq('active',true)
@@ -941,9 +938,9 @@ export default function MBBA(){
     }));
     // Write to Supabase
     Promise.all([
-      supabase.rpc('increment_wins',{spot_id:winner.id}),
-      supabase.rpc('increment_losses',{spot_id:loserSpot.id}),
-      supabase.from('votes').insert({
+      getSupabase().rpc('increment_wins',{spot_id:winner.id}),
+      getSupabase().rpc('increment_losses',{spot_id:loserSpot.id}),
+      getSupabase().from('votes').insert({
         winner_id:winner.id,
         loser_id:loserSpot.id,
         session_id:SESSION_ID,
@@ -966,20 +963,20 @@ export default function MBBA(){
     }));
     // Write to Supabase
     const tagList=Object.keys(tags).map(k=>k.split(":")[1]);
-    supabase.from('reviews').insert({
+    getSupabase().from('reviews').insert({
       spot_id:spotId,
       stars,
       tags:tagList,
       session_id:SESSION_ID,
     }).then(async()=>{
       // Update spot star average
-      const {data}=await supabase
+      const {data}=await getSupabase()
         .from('reviews')
         .select('stars')
         .eq('spot_id',spotId);
       if(data&&data.length){
         const avg=data.reduce((a,b)=>a+b.stars,0)/data.length;
-        await supabase.from('spots').update({
+        await getSupabase().from('spots').update({
           stars_total:avg*data.length,
           star_count:data.length,
         }).eq('id',spotId);
@@ -991,7 +988,7 @@ export default function MBBA(){
   const submitEdit=useCallback((spotId,data)=>{
     setSpots(prev=>prev.map(s=>s.id===spotId?{...s,...data}:s));
     // Write to Supabase (pending review)
-    supabase.from('spots').update({
+    getSupabase().from('spots').update({
       url:data.url||'',
       loc:data.loc||'',
       halal:data.halal||false,
@@ -1007,7 +1004,7 @@ export default function MBBA(){
     showToast("Flagged. We will review it.");
     const spot=spots.find(s=>s.id===spotId);
     // Write flag to Supabase
-    supabase.from('flags').insert({
+    getSupabase().from('flags').insert({
       spot_id:spotId,
       reason,
       other_text:otherText||'',
@@ -1040,7 +1037,7 @@ export default function MBBA(){
     setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
     showToast("Added to the battle");setSection("battle");
     // Write to Supabase
-    supabase.from('spots').insert(newSpotData).select().then(({data,error})=>{
+    getSupabase().from('spots').insert(newSpotData).select().then(({data,error})=>{
       if(!error&&data&&data[0]){
         const s=data[0];
         const mapped={
