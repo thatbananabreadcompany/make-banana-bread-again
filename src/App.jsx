@@ -1195,12 +1195,7 @@ export default function MBBA(){
         </div>
       )}
 
-      {/* DB ERROR BANNER */}
-      {dbError&&(
-        <div style={{background:"#FFF0F0",borderBottom:`1px solid #FFD0D0`,padding:"10px 20px",textAlign:"center",fontSize:13,color:T.red}}>
-          Having trouble connecting. Showing cached data. <button onClick={()=>setDbError(null)} style={{background:"none",border:"none",color:T.red,cursor:"pointer",fontWeight:600,fontFamily:T.font}}>Dismiss</button>
-        </div>
-      )}
+      {/* DB error logged to console only — no banner */}
 
       {/* VERCEL ANALYTICS — enable in Vercel dashboard, then add:
            import { Analytics } from '@vercel/analytics/react'
