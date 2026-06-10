@@ -820,6 +820,20 @@ export default function MBBA(){
         setDbError('ENV MISSING: URL=' + (url?'ok':'missing') + ' KEY=' + (key?'ok':'missing'));
         setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
       }
+      // Raw fetch test before using supabase client
+      try{
+        const testRes = await fetch(url+'/rest/v1/spots?select=id&limit=1',{
+          headers:{'apikey':key,'Authorization':'Bearer '+key}
+        });
+        if(!testRes.ok){
+          const txt = await testRes.text();
+          setDbError('HTTP '+testRes.status+': '+txt.slice(0,120));
+          setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
+        }
+      }catch(fetchErr){
+        setDbError('Fetch failed: '+fetchErr.message);
+        setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
+      }
       try{
         const {data,error}=await supabase
           .from('spots')
