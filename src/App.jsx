@@ -924,6 +924,25 @@ export default function MBBA(){
     }
   }
 
+  // ── RELOAD SPOTS FROM DB (called after votes to refresh rankings) ──────────
+  const reloadSpots=useCallback(async()=>{
+    try{
+      const data=await getSupabase().select('spots','select=*&order=name.asc');
+      if(data&&data.length>0){
+        setSpots(data.map(s=>({
+          id:s.id,name:s.name,loc:s.loc,cat:s.cat,
+          outlets:s.outlets||'single',url:s.url||'',
+          halal:s.halal||false,muslimOwned:s.muslim_owned||false,
+          vegan:s.vegan||false,dairyFree:s.dairy_free||false,
+          wins:Number(s.wins)||0,losses:Number(s.losses)||0,
+          weeklyWins:Number(s.weekly_wins)||0,
+          stars:s.star_count>0?Array(s.star_count).fill(s.stars_total/s.star_count):[],
+          tags:{},addedAt:new Date(s.added_at).getTime(),flagged:s.flagged||false,
+        })));
+      }
+    }catch(e){console.error('Reload error:',e);}
+  },[]);
+
   // ── LOAD WEEKLY WINNER ────────────────────────────────────────────────────
   const [weeklyWinner,setWeeklyWinner]=useState(null);
   useEffect(()=>{
@@ -934,6 +953,8 @@ export default function MBBA(){
     loadWinner();
   },[]);
 
+  // Reload from DB when switching to rankings
+  const handleSection=useCallback((s)=>{setSection(s);if(s==='rankings')reloadSpots();},[reloadSpots]);
   const nav=[{key:"battle",label:"Battle"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
   const showToast=useCallback((msg)=>{setToast(msg);setTimeout(()=>setToast(null),2000);},[]);
 
@@ -953,25 +974,17 @@ export default function MBBA(){
       if(s.id===loserSpot.id)return{...s,losses:s.losses+1};
       return s;
     }));
-    // Write to Supabase
-    Promise.all([
-      getSupabase().rpc('increment_wins',{spot_id:winner.id}),
-      getSupabase().rpc('increment_losses',{spot_id:loserSpot.id}),
-      getSupabase().from('votes').insert({
-        winner_id:winner.id,
-        loser_id:loserSpot.id,
-        session_id:SESSION_ID,
-      }),
-    ]).catch(err=>console.error('Vote write error:',err));
+    // Write to Supabase — non-blocking
+    const db=getSupabase();
+    db.rpc('increment_wins',{spot_id:winner.id}).catch(()=>{});
+    db.rpc('increment_losses',{spot_id:loserSpot.id}).catch(()=>{});
+    db.insert('votes',{winner_id:winner.id,loser_id:loserSpot.id,session_id:SESSION_ID}).catch(()=>{});
+    // Always advance regardless of DB result
     setTimeout(()=>{
       setChosen(null);
       setLoser(null);
       setBattles(b=>b+1);
-      setSpots(prev=>{
-        const next=randPair(prev);
-        setPair(next);
-        return prev;
-      });
+      setSpots(prev=>{setPair(randPair(prev));return prev;});
       if(battles>0&&battles%5===0)setReviewSpot(winner);
     },750);
   },[chosen,battles]);
@@ -1199,7 +1212,7 @@ export default function MBBA(){
           </button>
           <nav className="dk-nav" style={{display:"flex",gap:0,alignItems:"center"}}>
             {nav.map(n=>(
-              <button key={n.key} onClick={()=>setSection(n.key)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"none",color:section===n.key?T.black:T.muted,fontSize:13,fontWeight:section===n.key?600:400,cursor:"pointer",textDecoration:section===n.key?"underline":"none",textUnderlineOffset:"3px"}}>{n.label}</button>
+              <button key={n.key} onClick={()=>handleSection(n.key)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"none",color:section===n.key?T.black:T.muted,fontSize:13,fontWeight:section===n.key?600:400,cursor:"pointer",textDecoration:section===n.key?"underline":"none",textUnderlineOffset:"3px"}}>{n.label}</button>
             ))}
             <button onClick={()=>setShowAbout(true)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"none",color:T.muted,fontSize:13,cursor:"pointer"}}>About</button>
           </nav>
@@ -1527,7 +1540,7 @@ export default function MBBA(){
       {/* MOBILE NAV */}
       <nav className="mb-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:T.white,borderTop:`1px solid ${T.border}`,zIndex:100,padding:"8px 12px 0",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",alignItems:"center"}}>
         {[...nav,{key:"about",label:"About"}].map(n=>(
-          <button key={n.key} onClick={()=>n.key==="about"?setShowAbout(true):setSection(n.key)}
+          <button key={n.key} onClick={()=>n.key==="about"?setShowAbout(true):handleSection(n.key)}
             style={{flexShrink:0,padding:"7px 16px",borderRadius:20,border:`1.5px solid ${section===n.key&&n.key!=="about"?T.black:T.border}`,background:section===n.key&&n.key!=="about"?T.yellow:T.white,color:T.black,fontSize:13,fontWeight:section===n.key&&n.key!=="about"?700:400,cursor:"pointer",fontFamily:T.font,whiteSpace:"nowrap"}}>
             {n.label}
           </button>
