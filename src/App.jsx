@@ -837,12 +837,12 @@ export default function MBBA(){
   const [spots,setSpots]     = useState([]);
   const [isLoading,setIsLoading] = useState(false);
   const [dbError,setDbError]   = useState(null); // null = no error, string = show banner
-  const [section,setSection] = useState("battle");
+  const [section,setSection] = useState("vote");
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
   const [loser,setLoser]     = useState(null);
   const [sessionVotes,setSV] = useState(0);
-  const [battles,setBattles] = useState(0);
+  const [voteRounds,setVoteRounds] = useState(0);
   const [showAbout,setShowAbout]   = useState(false);
   const [reviewSpot,setReviewSpot] = useState(null);
   const [editSpot,setEditSpot]     = useState(null);
@@ -952,7 +952,7 @@ export default function MBBA(){
 
   // Reload from DB when switching to rankings
   const handleSection=useCallback((s)=>{setSection(s);if(s==='rankings')reloadSpots();},[reloadSpots]);
-  const nav=[{key:"battle",label:"Battle"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
+  const nav=[{key:"vote",label:"Vote"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
   const showToast=useCallback((msg)=>{setToast(msg);setTimeout(()=>setToast(null),2000);},[]);
 
   const handleNName=useCallback((val)=>{
@@ -987,11 +987,11 @@ export default function MBBA(){
     setTimeout(()=>{
       setChosen(null);
       setLoser(null);
-      setBattles(b=>b+1);
+      setVoteRounds(b=>b+1);
       setSpots(prev=>{setPair(randPair(prev));return prev;});
-      if(battles>0&&battles%5===0)setReviewSpot(winner);
+      if(voteRounds>0&&voteRounds%5===0)setReviewSpot(winner);
     },750);
-  },[chosen,battles]);
+  },[chosen,voteRounds]);
 
   const submitReview=useCallback((spotId,stars,tags)=>{
     // Optimistic update
@@ -1071,7 +1071,7 @@ export default function MBBA(){
     setSpots(prev=>{const u=[...prev,tempSpot];setPair(randPair(u));return u;});
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
     setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
-    showToast("Added to the battle");setSection("battle");
+    showToast("Added to the vote");setSection("vote");
 
     // Write to Supabase, then replace the temporary local item with the saved DB row
     getSupabase().insert('spots',newSpotData).then(data=>{
@@ -1215,7 +1215,7 @@ export default function MBBA(){
       {/* HEADER */}
       <header style={{borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.white,zIndex:100}}>
         <div style={{maxWidth:680,margin:"0 auto",padding:"0 20px",height:52,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
-          <button onClick={()=>setSection("battle")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          <button onClick={()=>setSection("vote")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
             <span style={{fontSize:18}}>🍌</span>
             <span style={{fontSize:14,fontWeight:700,letterSpacing:"-0.3px",color:T.black}}>Make Banana Bread Again</span>
           </button>
@@ -1230,8 +1230,8 @@ export default function MBBA(){
 
       <main style={{maxWidth:680,margin:"0 auto",padding:"0 20px",background:T.white,flex:1,width:"100%"}}>
 
-        {/* ══ BATTLE ══ */}
-        {section==="battle"&&(
+        {/* ══ VOTE ══ */}
+        {section==="vote"&&(
           <div className="sec">
             <div style={{textAlign:"center",padding:"40px 0 28px"}}>
               <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:T.muted,marginBottom:10}}>That list from Reddit.</p>
@@ -1319,7 +1319,7 @@ export default function MBBA(){
             </div>
 
             {/* Live top 5 */}
-            {battles>=3&&ranked.filter(s=>s.wins+s.losses>0).length>=3&&(
+            {voteRounds>=3&&ranked.filter(s=>s.wins+s.losses>0).length>=3&&(
               <div style={{marginTop:44,paddingTop:28,borderTop:`1px solid ${T.border}`}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:16}}>
                   <h2 style={{fontSize:17,fontWeight:700}}>Leading right now</h2>
@@ -1473,7 +1473,7 @@ export default function MBBA(){
             <button onClick={submitSpot} style={{width:"100%",padding:"15px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font,transition:"background 0.15s"}}
               onMouseEnter={e=>e.currentTarget.style.background=T.yellow}
               onMouseLeave={e=>e.currentTarget.style.background=T.white}>
-              Add to the battle
+              Add to the vote
             </button>
             <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:10,lineHeight:1.6}}>By submitting you confirm this is a real business selling banana bread or cake in Singapore.</p>
           </div>
