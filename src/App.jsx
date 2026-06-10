@@ -814,9 +814,10 @@ export default function MBBA(){
   useEffect(()=>{
     async function loadSpots(){
       setIsLoading(true);
-      // Debug: check env vars are present
-      if(!import.meta.env.VITE_SUPABASE_URL||!import.meta.env.VITE_SUPABASE_ANON_KEY){
-        setDbError('Missing environment variables — check Vercel settings.');
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if(!url||!key){
+        setDbError('ENV MISSING: URL=' + (url?'ok':'missing') + ' KEY=' + (key?'ok':'missing'));
         setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
       }
       try{
