@@ -974,10 +974,12 @@ export default function MBBA(){
       if(s.id===loserSpot.id)return{...s,losses:s.losses+1};
       return s;
     }));
-    // Write to Supabase — non-blocking
+    // Write to Supabase — direct update, no RPC needed
     const db=getSupabase();
-    db.rpc('increment_wins',{spot_id:winner.id}).catch(()=>{});
-    db.rpc('increment_losses',{spot_id:loserSpot.id}).catch(()=>{});
+    const wSpot=spots.find(s=>s.id===winner.id);
+    const lSpot=spots.find(s=>s.id===loserSpot.id);
+    if(wSpot) db.update('spots',{wins:wSpot.wins+1,weekly_wins:(wSpot.weeklyWins||0)+1},{id:winner.id}).catch(()=>{});
+    if(lSpot) db.update('spots',{losses:lSpot.losses+1},{id:loserSpot.id}).catch(()=>{});
     db.insert('votes',{winner_id:winner.id,loser_id:loserSpot.id,session_id:SESSION_ID}).catch(()=>{});
     // Always advance regardless of DB result
     setTimeout(()=>{
@@ -1115,7 +1117,6 @@ export default function MBBA(){
   },[fbName,fbEmail,fbType,fbMsg]);
 
   const ranked=useMemo(()=>[...spots].sort((a,b)=>calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses)),[spots]);
-  const totalVotes=useMemo(()=>spots.reduce((acc,s)=>acc+s.wins+s.losses,0),[spots]);
 
 
   const filterFn=useCallback((list)=>list.filter(s=>{
@@ -1227,7 +1228,7 @@ export default function MBBA(){
             <div style={{textAlign:"center",padding:"40px 0 28px"}}>
               <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:T.muted,marginBottom:10}}>That list from Reddit.</p>
               <h1 style={{fontSize:"clamp(24px,5.5vw,38px)",fontWeight:700,letterSpacing:"-0.8px",lineHeight:1.15,marginBottom:10,color:T.black}}>Which would you choose?</h1>
-              <p style={{fontSize:14,color:T.muted}}>{spots.length} spots · {totalVotes} votes cast</p>
+              <p style={{fontSize:14,color:T.muted}}>{spots.length} spots</p>
             </div>
 
             {/* BOTW banner — live winner or teaser */}
