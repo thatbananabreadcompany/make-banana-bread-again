@@ -154,16 +154,11 @@ const SEED = [
 
 // ── SUPABASE CLIENT ───────────────────────────────────────────────────────────
 import { createClient } from '@supabase/supabase-js'
-// Client initialized lazily to avoid undefined env vars at module load time
-let _supabase = null;
-function getSupabase(){
-  if(!_supabase){
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if(url && key) _supabase = createClient(url, key);
-  }
-  return _supabase;
-}
+const _supabase = createClient(
+  'https://cpefjwjyxgmdwjrfirda.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwZWZqd2p5eGdtZHdqcmZpcmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjIwNTUsImV4cCI6MjA5NjU5ODA1NX0.a0wLpyBfUhaj3KR5MBjlForRcxfxHIrKmuEEQUPL20w'
+);
+function getSupabase(){ return _supabase; }
 
 
 // ── SESSION ID (anonymous, persists per device) ───────────────────────────
@@ -820,17 +815,7 @@ export default function MBBA(){
   useEffect(()=>{
     async function loadSpots(){
       setIsLoading(true);
-      const sbUrl = import.meta.env.VITE_SUPABASE_URL;
-      const sbKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if(!sbUrl || sbUrl==='undefined' || !sbKey || sbKey==='undefined'){
-        setDbError('ENV MISSING — check Vercel environment variables.');
-        setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
-      }
       const db = getSupabase();
-      if(!db){
-        setDbError('Supabase client failed to initialise.');
-        setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
-      }
       try{
         const {data,error}=await supabase
           .from('spots')
