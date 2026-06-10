@@ -923,6 +923,7 @@ export default function MBBA(){
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
         html,body,#root{background:${T.white};font-family:${T.font};color:${T.black};-webkit-font-smoothing:antialiased;min-height:100vh;}
+        body{background:${T.white} !important;}
         body{overscroll-behavior-y:contain;}
         button,input,textarea{font-family:${T.font};-webkit-appearance:none;appearance:none;}
         button{touch-action:manipulation;}
@@ -1304,7 +1305,7 @@ export default function MBBA(){
       </nav>
 
       {/* FOOTER */}
-      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",maxWidth:680,margin:"0 auto",background:T.white}}>
+      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",background:T.white,width:"100%"}}>
         <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:12,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px"}}>
           About · FAQ · Disclaimer
         </button>
