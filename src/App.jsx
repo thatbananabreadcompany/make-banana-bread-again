@@ -665,7 +665,7 @@ function Filters({fCat,setFCat,fHalal,setFHalal,fMuslim,setFMuslim,fVegan,setFVe
           <Pill key={l} active={v} onClick={()=>s(prev=>!prev)}>{l}</Pill>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -918,12 +918,14 @@ export default function MBBA(){
   const inp={width:"100%",padding:"12px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:T.font,color:T.black,background:T.white,outline:"none"};
 
   return(
-    <>
+    <div style={{minHeight:"100vh",background:T.white,display:"flex",flexDirection:"column"}}>
       <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
-        html,body,#root{background:${T.white};font-family:${T.font};color:${T.black};-webkit-font-smoothing:antialiased;min-height:100vh;}
-        body{background:${T.white} !important;}
+        html,body,#root{background:${T.white};font-family:${T.font};color:${T.black};-webkit-font-smoothing:antialiased;min-height:100%;}
+        html{height:100%;}
+        body{min-height:100%;background:${T.white} !important;margin:0;padding:0;}
+        #root{display:flex;flex-direction:column;min-height:100vh;}
         body{overscroll-behavior-y:contain;}
         button,input,textarea{font-family:${T.font};-webkit-appearance:none;appearance:none;}
         button{touch-action:manipulation;}
@@ -992,7 +994,7 @@ export default function MBBA(){
         </div>
       </header>
 
-      <main style={{maxWidth:680,margin:"0 auto",padding:"0 20px",background:T.white}}>
+      <main style={{maxWidth:680,margin:"0 auto",padding:"0 20px",background:T.white,flex:1,width:"100%"}}>
 
         {/* ══ BATTLE ══ */}
         {section==="battle"&&(
@@ -1305,11 +1307,11 @@ export default function MBBA(){
       </nav>
 
       {/* FOOTER */}
-      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",background:T.white,width:"100%"}}>
+      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",background:T.white,width:"100%",flexShrink:0}}>
         <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:12,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px"}}>
           About · FAQ · Disclaimer
         </button>
       </footer>
-    </>
+    </div>
   );
 }
