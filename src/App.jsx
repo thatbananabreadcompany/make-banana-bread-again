@@ -786,10 +786,17 @@ export default function MBBA(){
   const [nDairy,setNDairy]=useState(false);
   const [nSG,setNSG]=useState(false);
   const [formErr,setFormErr]=useState("");
+  const [fbName,setFbName]=useState("");
+  const [fbEmail,setFbEmail]=useState("");
+  const [fbType,setFbType]=useState("General feedback");
+  const [fbMsg,setFbMsg]=useState("");
+  const [fbSending,setFbSending]=useState(false);
+  const [fbDone,setFbDone]=useState(false);
+  const [fbErr,setFbErr]=useState("");
   const [dupWarn,setDupWarn]=useState(null);
 
   useOGMeta();
-  const nav=[{key:"battle",label:"Battle"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"}];
+  const nav=[{key:"battle",label:"Battle"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
   const showToast=useCallback((msg)=>{setToast(msg);setTimeout(()=>setToast(null),2000);},[]);
 
   const handleNName=useCallback((val)=>{
@@ -833,10 +840,14 @@ export default function MBBA(){
     showToast("Edit applied. Thanks!");
   },[showToast]);
 
-  const flagListing=useCallback((spotId)=>{
+  const flagListing=useCallback((spotId,reason,otherText)=>{
     setSpots(prev=>prev.map(s=>s.id===spotId?{...s,flagged:true}:s));
     showToast("Flagged. We will review it.");
-  },[showToast]);
+    const spot=spots.find(s=>s.id===spotId);
+    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({type:"flag",spotName:spot?.name||"Unknown",spotLoc:spot?.loc||"",reason,otherText:otherText||""})
+    }).catch(()=>{});
+  },[showToast,spots]);
 
   const submitSpot=useCallback(()=>{
     // Rate limiting handled server-side via Supabase RLS + IP check
@@ -854,7 +865,32 @@ export default function MBBA(){
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
     setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
     showToast("Added to the battle");setSection("battle");
+    // Notify via Resend
+    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets:nOut,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy})
+    }).catch(()=>{});
   },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nVegan,nDairy,nSG,showToast]);
+
+  const submitFeedback=useCallback(async()=>{
+    if(!fbMsg.trim()){setFbErr("Please write your message.");return;}
+    setFbSending(true);setFbErr("");
+    try{
+      const res=await fetch("/api/notify",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          type:"feedback",
+          name:fbName||"Anonymous",
+          email:fbEmail||"Not provided",
+          feedbackType:fbType,
+          message:fbMsg,
+        })
+      });
+      if(res.ok){setFbDone(true);setFbName("");setFbEmail("");setFbMsg("");setFbType("General feedback");}
+      else{setFbErr("Something went wrong. Please try again.");}
+    }catch{setFbErr("Something went wrong. Please try again.");}
+    setFbSending(false);
+  },[fbName,fbEmail,fbType,fbMsg]);
 
   const ranked=useMemo(()=>[...spots].sort((a,b)=>calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses)),[spots]);
   const totalVotes=useMemo(()=>spots.reduce((acc,s)=>acc+s.wins+s.losses,0),[spots]);
@@ -913,8 +949,8 @@ export default function MBBA(){
         @media(max-width:560px){.dk-nav{display:none !important;}}
         @media(min-width:561px){.mb-nav{display:none !important;}}
         /* Safe area for notched phones */
-        .mb-nav{padding-bottom:calc(8px + env(safe-area-inset-bottom));}
-        main{padding-bottom:calc(100px + env(safe-area-inset-bottom));}
+        .mb-nav{padding-bottom:max(18px, env(safe-area-inset-bottom)) !important;}
+        main{padding-bottom:calc(140px + env(safe-area-inset-bottom)) !important;}
         /* Better tap feedback on pills and buttons */
         button:active{opacity:0.75;}
         /* Prevent text selection on interactive cards */
@@ -924,7 +960,7 @@ export default function MBBA(){
       {showAbout   && <AboutSheet  onClose={()=>setShowAbout(false)}/>}
       {reviewSpot  && <ReviewSheet spot={reviewSpot}  onSubmit={(s,t)=>submitReview(reviewSpot.id,s,t)} onClose={()=>setReviewSpot(null)}/>}
       {editSpot    && <EditSheet   spot={editSpot}    onSubmit={submitEdit}  onClose={()=>setEditSpot(null)}/>}
-      {flagSpot    && <FlagSheet   spot={flagSpot}    onFlag={flagListing}   onClose={()=>setFlagSpot(null)}/>}
+      {flagSpot    && <FlagSheet   spot={flagSpot}    onFlag={(id,reason,other)=>flagListing(id,reason,other)}   onClose={()=>setFlagSpot(null)}/>}
       {shareSpot   && <ShareSheet  spot={shareSpot}   votes={sessionVotes}   isWinner={shareIsWinner} onClose={()=>setShareSpot(null)}/>}
 
       {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:T.black,color:T.white,padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:500,zIndex:400,whiteSpace:"nowrap",animation:"toastIn 0.22s ease",pointerEvents:"none"}}>{toast}</div>}
@@ -1189,10 +1225,76 @@ export default function MBBA(){
             <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:10,lineHeight:1.6}}>By submitting you confirm this is a real business selling banana bread or cake in Singapore.</p>
           </div>
         )}
+
+        {/* ══ FEEDBACK ══ */}
+        {section==="feedback"&&(
+          <div className="sec" style={{paddingTop:40}}>
+            <h1 style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginBottom:8}}>Feedback</h1>
+            <p style={{fontSize:13,color:T.muted,marginBottom:28,lineHeight:1.6}}>
+              Got a suggestion, spotted an issue, or want to say something? We read every message.
+              Reach us directly at{" "}
+              <a href="mailto:thatbananabreadcompany@gmail.com" style={{color:T.blue,textDecoration:"none",fontWeight:500}}>
+                thatbananabreadcompany@gmail.com
+              </a>
+              {" "}or use the form below.
+            </p>
+
+            {fbDone?(
+              <div style={{background:"#F0FDF4",border:`1.5px solid ${T.green}`,borderRadius:16,padding:"28px 20px",textAlign:"center"}}>
+                <p style={{fontSize:22,marginBottom:8}}>🍌</p>
+                <p style={{fontSize:16,fontWeight:700,color:T.black,marginBottom:6}}>Message sent.</p>
+                <p style={{fontSize:13,color:T.muted,lineHeight:1.6}}>Thanks for taking the time. We'll get back to you if needed at <span style={{color:T.black,fontWeight:500}}>{fbEmail||"the email you provided"}</span>.</p>
+                <button onClick={()=>setFbDone(false)} style={{marginTop:20,padding:"10px 24px",borderRadius:20,border:`1.5px solid ${T.border}`,background:T.white,color:T.black,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:T.font}}>
+                  Send another
+                </button>
+              </div>
+            ):(
+              <>
+                <div style={{marginBottom:18}}>
+                  <label style={lbl}>Type</label>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {["General feedback","Suggest a spot","Report an issue","Partnership enquiry","Other"].map(t=>(
+                      <Pill key={t} active={fbType===t} onClick={()=>setFbType(t)}>{t}</Pill>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{marginBottom:18}}>
+                  <label style={lbl}>Name <span style={{fontWeight:400,textTransform:"none",letterSpacing:0,color:T.muted}}>(optional)</span></label>
+                  <input type="text" value={fbName} onChange={e=>setFbName(e.target.value)} placeholder="Your name" style={inp}/>
+                </div>
+
+                <div style={{marginBottom:18}}>
+                  <label style={lbl}>Email <span style={{fontWeight:400,textTransform:"none",letterSpacing:0,color:T.muted}}>(optional — only if you want a reply)</span></label>
+                  <input type="email" value={fbEmail} onChange={e=>setFbEmail(e.target.value)} placeholder="your@email.com" style={inp}/>
+                </div>
+
+                <div style={{marginBottom:24}}>
+                  <label style={lbl}>Message</label>
+                  <textarea value={fbMsg} onChange={e=>setFbMsg(e.target.value)} placeholder="Tell us anything..." rows={5}
+                    style={{...inp,resize:"vertical",minHeight:120,lineHeight:1.6}}/>
+                </div>
+
+                {fbErr&&<p style={{fontSize:13,color:T.red,marginBottom:12,fontWeight:600}}>{fbErr}</p>}
+
+                <button onClick={submitFeedback} disabled={fbSending}
+                  style={{width:"100%",padding:"15px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:fbSending?"default":"pointer",fontFamily:T.font,transition:"background 0.15s",opacity:fbSending?0.6:1}}
+                  onMouseEnter={e=>{if(!fbSending)e.currentTarget.style.background=T.yellow;}}
+                  onMouseLeave={e=>e.currentTarget.style.background=T.white}>
+                  {fbSending?"Sending…":"Send message"}
+                </button>
+
+                <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:10,lineHeight:1.6}}>
+                  We respond to partnership enquiries and legitimate issues. Not everything will get a reply but everything gets read.
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </main>
 
       {/* MOBILE NAV */}
-      <nav className="mb-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:T.white,borderTop:`1px solid ${T.border}`,zIndex:100,padding:"8px 12px 18px",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",alignItems:"center"}}>
+      <nav className="mb-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:T.white,borderTop:`1px solid ${T.border}`,zIndex:100,padding:"8px 12px 0",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",alignItems:"center"}}>
         {[...nav,{key:"about",label:"About"}].map(n=>(
           <button key={n.key} onClick={()=>n.key==="about"?setShowAbout(true):setSection(n.key)}
             style={{flexShrink:0,padding:"7px 16px",borderRadius:20,border:`1.5px solid ${section===n.key&&n.key!=="about"?T.black:T.border}`,background:section===n.key&&n.key!=="about"?T.yellow:T.white,color:T.black,fontSize:13,fontWeight:section===n.key&&n.key!=="about"?700:400,cursor:"pointer",fontFamily:T.font,whiteSpace:"nowrap"}}>
@@ -1202,7 +1304,7 @@ export default function MBBA(){
       </nav>
 
       {/* FOOTER */}
-      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px",textAlign:"center",maxWidth:680,margin:"0 auto",background:T.white}}>
+      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",maxWidth:680,margin:"0 auto",background:T.white}}>
         <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:12,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px"}}>
           About · FAQ · Disclaimer
         </button>
