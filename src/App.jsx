@@ -655,9 +655,9 @@ function EditSheet({spot,onClose,onSubmit}){
       <p style={{fontSize:14,fontWeight:600,marginBottom:2}}>{spot.name}</p>
       <p style={{fontSize:12,color:T.muted,marginBottom:18}}>Suggestions go to our team before going live.</p>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Website or Instagram link</label>
-      <input value={eUrl} onChange={e=>setEUrl(e.target.value)} placeholder="https://instagram.com/thisbrand" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
+      <input value={eUrl} onChange={e=>setEUrl(e.target.value)} placeholder="https://instagram.com/thisbrand" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Location or area</label>
-      <input value={eLoc} onChange={e=>setELoc(e.target.value)} placeholder="e.g. Joo Chiat" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
+      <input value={eLoc} onChange={e=>setELoc(e.target.value)} placeholder="e.g. Joo Chiat" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8}}>Tags</label>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
         {[["Halal",eHalal,setEHalal],["Muslim-owned",eMuslim,setEMuslim],["Vegan",eVegan,setEVegan],["Dairy-free",eDairy,setEDairy]].map(([l,v,s])=>(
@@ -1145,7 +1145,7 @@ export default function MBBA(){
   const openShare=(spot,isWinner=false)=>{setShareSpot(spot);setShareIsWinner(isWinner);};
 
   const lbl={fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8};
-  const inp={width:"100%",padding:"12px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:T.font,color:T.black,background:T.white,outline:"none"};
+  const inp={width:"100%",padding:"12px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none"};
 
   return(
     <div style={{minHeight:"100vh",background:T.white,display:"flex",flexDirection:"column"}}>
@@ -1157,7 +1157,8 @@ export default function MBBA(){
         body{min-height:100%;background:${T.white} !important;margin:0;padding:0;}
         #root{display:flex;flex-direction:column;min-height:100vh;}
         body{overscroll-behavior-y:contain;}
-        button,input,textarea{font-family:${T.font};-webkit-appearance:none;appearance:none;}
+        button,input,textarea,select{font-family:${T.font};-webkit-appearance:none;appearance:none;}
+        input,textarea,select{font-size:16px !important;}
         button{touch-action:manipulation;}
         a{-webkit-tap-highlight-color:transparent;}
         img{max-width:100%;height:auto;display:block;}
