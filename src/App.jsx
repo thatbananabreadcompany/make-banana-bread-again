@@ -665,7 +665,7 @@ function Filters({fCat,setFCat,fHalal,setFHalal,fMuslim,setFMuslim,fVegan,setFVe
           <Pill key={l} active={v} onClick={()=>s(prev=>!prev)}>{l}</Pill>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
