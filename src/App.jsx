@@ -865,9 +865,9 @@ export default function MBBA(){
             muslimOwned:s.muslim_owned||false,
             vegan:s.vegan||false,
             dairyFree:s.dairy_free||false,
-            wins:s.wins||0,
-            losses:s.losses||0,
-            weeklyWins:s.weekly_wins||0,
+            wins:Number(s.wins)||0,
+            losses:Number(s.losses)||0,
+            weeklyWins:Number(s.weekly_wins)||0,
             stars:s.star_count>0?Array(s.star_count).fill(s.stars_total/s.star_count):[],
             tags:{},
             addedAt:new Date(s.added_at).getTime(),
@@ -964,10 +964,16 @@ export default function MBBA(){
       }),
     ]).catch(err=>console.error('Vote write error:',err));
     setTimeout(()=>{
-      setSpots(prev=>{setPair(randPair(prev));return prev;});
-      setChosen(null);setLoser(null);setBattles(b=>b+1);
+      setChosen(null);
+      setLoser(null);
+      setBattles(b=>b+1);
+      setSpots(prev=>{
+        const next=randPair(prev);
+        setPair(next);
+        return prev;
+      });
       if(battles>0&&battles%5===0)setReviewSpot(winner);
-    },880);
+    },750);
   },[chosen,battles]);
 
   const submitReview=useCallback((spotId,stars,tags)=>{
@@ -1279,16 +1285,9 @@ export default function MBBA(){
               <p style={{textAlign:"center",fontSize:12,color:T.muted,marginTop:8}}>{sessionVotes} vote{sessionVotes!==1?"s":""} this session</p>
             )}
 
-            {/* Session vote counter */}
-            {sessionVotes>0&&(
-              <p style={{textAlign:"center",fontSize:12,color:T.muted,marginTop:6,marginBottom:2}}>
-                {sessionVotes} vote{sessionVotes!==1?"s":""} this session
-              </p>
-            )}
-
             {/* Post-vote actions */}
             <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:14,flexWrap:"wrap"}}>
-              <button onClick={()=>{if(!chosen){setSpots(prev=>{setPair(randPair(prev));return prev;});}}} style={{background:"none",border:"none",color:T.muted,fontSize:13,cursor:"pointer",fontFamily:T.font,padding:"4px 8px"}}>Skip</button>
+              <button onClick={()=>{setSpots(prev=>{setPair(randPair(prev));return prev;});setChosen(null);setLoser(null);}} style={{background:"none",border:"none",color:T.muted,fontSize:13,cursor:"pointer",fontFamily:T.font,padding:"4px 8px"}}>Skip</button>
               {chosen&&(
                 <>
                   <button onClick={()=>setReviewSpot(spots.find(s=>s.id===chosen))} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:20,color:T.black,fontSize:13,fontWeight:500,cursor:"pointer",padding:"5px 16px",fontFamily:T.font}}>Rate it</button>
