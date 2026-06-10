@@ -804,7 +804,7 @@ function SpotCard({spot,onRate,onFlag,onEdit}){
 export default function MBBA(){
   const [spots,setSpots]     = useState([]);
   const [isLoading,setIsLoading] = useState(false);
-  const [dbError,setDbError]   = useState(null);
+  const [dbError,setDbError]   = useState(null); // null = no error, string = show banner
   const [section,setSection] = useState("battle");
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
@@ -864,6 +864,7 @@ export default function MBBA(){
           .order('name',{ascending:true});
         if(error) throw error;
         if(data&&data.length>0){
+          setDbError(null); // Clear any previous error
           // Map DB columns to app shape
           const mapped=data.map(s=>({
             id:s.id,
