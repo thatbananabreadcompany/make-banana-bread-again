@@ -1140,7 +1140,7 @@ export default function MBBA(){
                 </div>
               );
             })}
-            <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:28,lineHeight:1.6}}>Rankings reflect community votes for discovery only. Not a professional review or endorsement.</p>
+            <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:28,lineHeight:1.6}}>Rankings reflect community votes for discovery only. Not a professional review or endorsement. <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:11,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px",padding:0}}>About · Disclaimer</button></p>
           </div>
         )}
 
@@ -1305,13 +1305,6 @@ export default function MBBA(){
           </button>
         ))}
       </nav>
-
-      {/* FOOTER */}
-      <footer style={{borderTop:`1px solid ${T.border}`,padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",textAlign:"center",background:T.white,width:"100%",flexShrink:0}}>
-        <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:12,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px"}}>
-          About · FAQ · Disclaimer
-        </button>
-      </footer>
     </div>
   );
 }
