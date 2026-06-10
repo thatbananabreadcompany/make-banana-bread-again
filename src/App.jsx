@@ -814,6 +814,11 @@ export default function MBBA(){
   useEffect(()=>{
     async function loadSpots(){
       setIsLoading(true);
+      // Debug: check env vars are present
+      if(!import.meta.env.VITE_SUPABASE_URL||!import.meta.env.VITE_SUPABASE_ANON_KEY){
+        setDbError('Missing environment variables — check Vercel settings.');
+        setSpots(SEED);setPair(randPair(SEED));setIsLoading(false);return;
+      }
       try{
         const {data,error}=await supabase
           .from('spots')
@@ -849,7 +854,9 @@ export default function MBBA(){
         }
       }catch(err){
         console.error('Failed to load spots:',err);
-        setDbError('Having trouble connecting. Showing local data.');
+        // Show specific error in banner for debugging
+        const msg = err?.message || err?.toString() || 'Unknown error';
+        setDbError('Connection error: ' + msg + ' — showing local data.');
         setSpots(SEED);
         setPair(randPair(SEED));
       }
