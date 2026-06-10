@@ -48,21 +48,6 @@ const FAQS = [
   { q:"Can I get my listing removed?", a:`Yes. Email ${CONTACT} and we will act on it promptly.`, link:null},
 ];
 
-const TIERS = [
-  { min:1,   max:4,   label:"Banana Curious",     emoji:"🍌",         bg:"#FFFDE7", border:"#F9E44A" },
-  { min:5,   max:9,   label:"Banana Fan",          emoji:"🍌🍌",       bg:"#FFF8DC", border:"#E8C84A" },
-  { min:10,  max:24,  label:"Banana Enthusiast",   emoji:"🍌🍌🍌",     bg:"#FFE88A", border:"#C8A000" },
-  { min:25,  max:49,  label:"Banana Connoisseur",  emoji:"⭐🍌⭐",      bg:"#FFD700", border:"#A07800" },
-  { min:50,  max:99,  label:"Banana Authority",    emoji:"🔥🍌🔥",      bg:"#FFAA00", border:"#805000" },
-  { min:100, max:199, label:"Banana Oracle",       emoji:"👑🍌",        bg:"#FF8C00", border:"#703000" },
-  { min:200, max:499, label:"Grand Banana",        emoji:"🏆🍌🏆",      bg:"#FF6B35", border:"#602000" },
-  { min:500, max:Infinity, label:"Legendary Banana",emoji:"🍌👑🍌",    bg:"#E63000", border:"#500000" },
-];
-function getTier(v){ return TIERS.find(t=>v>=t.min&&v<=t.max)||TIERS[0]; }
-function getNextTier(v){
-  const idx=TIERS.findIndex(t=>v>=t.min&&v<=t.max);
-  return idx<TIERS.length-1?TIERS[idx+1]:null;
-}
 
 function strSimilarity(a, b) {
   const x=a.toLowerCase().replace(/[^a-z0-9]/g,"");
@@ -214,6 +199,12 @@ function getSessionId(){
   }catch{return 'anonymous';}
 }
 const SESSION_ID=getSessionId();
+
+// Minimal tier for badge canvas (winner badge only)
+const TIERS = [
+  { min:1, max:Infinity, label:"Banana Bread Voter", emoji:"🍌", bg:"#FFF8DC", border:"#E8C84A" },
+];
+function getTier(){ return TIERS[0]; }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function calcElo(w,l){const n=w+l;if(!n)return 1000;return Math.round(1000+(w-l)*32);}
@@ -809,10 +800,7 @@ export default function MBBA(){
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
   const [loser,setLoser]     = useState(null);
-  const [sessionVotes,setSV] = useState(()=>{
-    try{const v=parseInt(localStorage.getItem('mbba_votes')||'0');return isNaN(v)?0:v;}
-    catch{return 0;}
-  });
+  const [sessionVotes,setSV] = useState(0);
   const [battles,setBattles] = useState(0);
   const [showAbout,setShowAbout]   = useState(false);
   const [reviewSpot,setReviewSpot] = useState(null);
@@ -958,11 +946,7 @@ export default function MBBA(){
 
   const vote=useCallback((winner,loserSpot)=>{
     if(chosen)return;
-    setChosen(winner.id);setLoser(loserSpot.id);setSV(v=>{
-      const next=v+1;
-      try{localStorage.setItem('mbba_votes',String(next));}catch{}
-      return next;
-    });
+    setChosen(winner.id);setLoser(loserSpot.id);setSV(v=>v+1);
     // Optimistic UI update
     setSpots(prev=>prev.map(s=>{
       if(s.id===winner.id)return{...s,wins:s.wins+1,weeklyWins:(s.weeklyWins||0)+1};
@@ -1113,7 +1097,7 @@ export default function MBBA(){
 
   const ranked=useMemo(()=>[...spots].sort((a,b)=>calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses)),[spots]);
   const totalVotes=useMemo(()=>spots.reduce((acc,s)=>acc+s.wins+s.losses,0),[spots]);
-  const tier=getTier(Math.max(sessionVotes,1));
+
 
   const filterFn=useCallback((list)=>list.filter(s=>{
     if(fCat!=="All"&&s.cat!==fCat)return false;
@@ -1258,17 +1242,7 @@ export default function MBBA(){
               </div>
             )}
 
-            {/* Tier strip */}
-            {sessionVotes>0&&(
-              <div onClick={()=>openShare(pair[0],false)} style={{background:tier.bg,border:`1.5px solid ${tier.border}`,borderRadius:14,padding:"10px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-                <span style={{fontSize:22}}>{tier.emoji}</span>
-                <div style={{flex:1}}>
-                  <p style={{fontSize:12,fontWeight:700,color:T.black}}>{tier.label}</p>
-                  <p style={{fontSize:11,color:"#5C4500"}}>{sessionVotes} vote{sessionVotes!==1?"s":""} this session</p>
-                </div>
-                <span style={{fontSize:12,color:"#8B6A00",fontWeight:500}}>Share →</span>
-              </div>
-            )}
+
 
             {/* Cards */}
             <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -1299,6 +1273,18 @@ export default function MBBA(){
               })}
               <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:30,height:30,borderRadius:"50%",background:T.white,border:`1.5px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:T.muted,letterSpacing:"0.05em",zIndex:10,pointerEvents:"none",boxShadow:"0 1px 6px rgba(0,0,0,0.08)"}}>VS</div>
             </div>
+
+            {/* Session vote counter */}
+            {sessionVotes>0&&(
+              <p style={{textAlign:"center",fontSize:12,color:T.muted,marginTop:8}}>{sessionVotes} vote{sessionVotes!==1?"s":""} this session</p>
+            )}
+
+            {/* Session vote counter */}
+            {sessionVotes>0&&(
+              <p style={{textAlign:"center",fontSize:12,color:T.muted,marginTop:6,marginBottom:2}}>
+                {sessionVotes} vote{sessionVotes!==1?"s":""} this session
+              </p>
+            )}
 
             {/* Post-vote actions */}
             <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:14,flexWrap:"wrap"}}>
