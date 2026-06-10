@@ -127,14 +127,12 @@ const SEED = [
   mkSpot(54, "Two of Us Bakes",          "Macpherson",            "Home Baker",    "single",     "https://instagram.com/twoofusbakes",{halal:true,muslimOwned:true}),
   mkSpot(55, "Uncle Lee's Confectionery","TBC",                   "Heritage",      "single",     "https://uncleleeconfectionery.cococart.co"),
   mkSpot(56, "Wheathead",                "One-North",             "Bakery",        "single",     "https://wheathead.supplies"),
-  mkSpot(58, "Mini Toast House",         "Chinatown / Toa Payoh",  "Hawker",        "multiple",   ""),
-  mkSpot(59, "Bakersmith",                "Tampines / Marine Parade","Chain",         "multiple",   "https://bakersmith.sg"),
-  mkSpot(58, "Mini Toast House",         "Chinatown / Toa Payoh",   "Hawker",        "multiple",   ""),
-  mkSpot(59, "Bakersmith",                "Tampines / Marine Parade", "Chain",         "multiple",   "https://bakersmith.sg"),
-  mkSpot(60, "Huggs Coffee",              "Island-wide",              "Chain",         "island-wide","https://huggscoffee.com"),
-  mkSpot(61, "Unpackt",                   "Mandai Wildlife West",     "Café",          "single",     "https://instagram.com/unpackt.sg"),
-  mkSpot(62, "Frosted by Fang",           "Joo Seng / MacPherson",    "Bakery",        "single",     "https://frostedbyfang.com"),
   mkSpot(57, "Yeast Side",               "Island-wide",           "Café",          "multiple",   "https://instagram.com/yeastsidesg"),
+  mkSpot(58, "Mini Toast House",         "Chinatown / Toa Payoh",  "Hawker",        "multiple",   ""),
+  mkSpot(59, "Bakersmith",               "Tampines / Marine Parade","Chain",         "multiple",   "https://bakersmith.sg"),
+  mkSpot(60, "Huggs Coffee",             "Island-wide",           "Chain",         "island-wide","https://huggscoffee.com"),
+  mkSpot(61, "Unpackt",                  "Mandai Wildlife West",  "Café",          "single",     "https://instagram.com/unpackt.sg"),
+  mkSpot(62, "Frosted by Fang",          "Joo Seng / MacPherson", "Bakery",        "single",     "https://frostedbyfang.com"),
 ];
 
 // ── SUPABASE REST CLIENT (direct fetch, no SDK) ───────────────────────────────
@@ -165,7 +163,9 @@ const sbDb = {
     return res.json();
   },
   async update(table, data, match) {
-    const query = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
+    const query = Object.entries(match)
+      .map(([k,v])=>`${encodeURIComponent(k)}=eq.${encodeURIComponent(v)}`)
+      .join('&');
     const res = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
       method: 'PATCH',
       headers: SB_HEADERS,
@@ -185,6 +185,47 @@ const sbDb = {
   },
 };
 function getSupabase(){ return sbDb; }
+
+function mapSpotFromDb(s){
+  return {
+    id:s.id,
+    name:s.name,
+    loc:s.loc,
+    cat:s.cat,
+    outlets:s.outlets||'single',
+    url:s.url||'',
+    halal:!!s.halal,
+    muslimOwned:!!s.muslim_owned,
+    vegan:!!s.vegan,
+    dairyFree:!!s.dairy_free,
+    wins:Number(s.wins)||0,
+    losses:Number(s.losses)||0,
+    weeklyWins:Number(s.weekly_wins)||0,
+    stars:Number(s.star_count)>0 ? Array(Number(s.star_count)).fill(Number(s.stars_total)/Number(s.star_count)) : [],
+    tags:{},
+    addedAt:s.added_at ? new Date(s.added_at).getTime() : Date.now(),
+    flagged:!!s.flagged,
+  };
+}
+
+function mapSpotToDb(s){
+  return {
+    name:s.name,
+    loc:s.loc,
+    cat:s.cat,
+    outlets:s.outlets||'single',
+    url:s.url||'',
+    halal:!!s.halal,
+    muslim_owned:!!s.muslimOwned,
+    vegan:!!s.vegan,
+    dairy_free:!!s.dairyFree,
+    wins:Number(s.wins)||0,
+    losses:Number(s.losses)||0,
+    weekly_wins:Number(s.weeklyWins)||0,
+    stars_total:s.stars?.length ? s.stars.reduce((a,b)=>a+b,0) : 0,
+    star_count:s.stars?.length || 0,
+  };
+}
 
 
 // ── SESSION ID (anonymous, persists per device) ───────────────────────────
@@ -846,33 +887,10 @@ export default function MBBA(){
       setIsLoading(true);
       const db = getSupabase();
       try{
-        const {data,error}=await supabase
-          .from('spots')
-          .select('*')
-          .order('name',{ascending:true});
-        if(error) throw error;
+        const data=await db.select('spots','select=*&order=name.asc');
         if(data&&data.length>0){
-          setDbError(null); // Clear any previous error
-          // Map DB columns to app shape
-          const mapped=data.map(s=>({
-            id:s.id,
-            name:s.name,
-            loc:s.loc,
-            cat:s.cat,
-            outlets:s.outlets||'single',
-            url:s.url||'',
-            halal:s.halal||false,
-            muslimOwned:s.muslim_owned||false,
-            vegan:s.vegan||false,
-            dairyFree:s.dairy_free||false,
-            wins:Number(s.wins)||0,
-            losses:Number(s.losses)||0,
-            weeklyWins:Number(s.weekly_wins)||0,
-            stars:s.star_count>0?Array(s.star_count).fill(s.stars_total/s.star_count):[],
-            tags:{},
-            addedAt:new Date(s.added_at).getTime(),
-            flagged:s.flagged||false,
-          }));
+          setDbError(null);
+          const mapped=data.map(mapSpotFromDb);
           setSpots(mapped);
           setPair(randPair(mapped));
         } else {
@@ -897,26 +915,14 @@ export default function MBBA(){
     const inserted=[];
     const batchSize=10;
     for(let i=0;i<SEED.length;i+=batchSize){
-      const batch=SEED.slice(i,i+batchSize).map(s=>({
-        name:s.name,loc:s.loc,cat:s.cat,outlets:s.outlets,
-        url:s.url||'',halal:s.halal||false,muslim_owned:s.muslimOwned||false,
-        vegan:s.vegan||false,dairy_free:s.dairyFree||false,
-        wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
-      }));
+      const batch=SEED.slice(i,i+batchSize).map(mapSpotToDb);
       try{
         const rows = await db.insert('spots', batch);
         if(rows) inserted.push(...(Array.isArray(rows)?rows:[rows]));
       }catch(e){ console.error('Batch error:',e.message); }
     }
     if(inserted.length>0){
-      const mapped=inserted.map(s=>({
-        id:s.id,name:s.name,loc:s.loc,cat:s.cat,
-        outlets:s.outlets||'single',url:s.url||'',
-        halal:s.halal||false,muslimOwned:s.muslim_owned||false,
-        vegan:s.vegan||false,dairyFree:s.dairy_free||false,
-        wins:0,losses:0,weeklyWins:0,stars:[],tags:{},
-        addedAt:new Date(s.added_at).getTime(),flagged:false,
-      }));
+      const mapped=inserted.map(mapSpotFromDb);
       setSpots(mapped);setPair(randPair(mapped));setDbError(null);
     }else{
       setDbError('Seed failed — check Supabase policies.');
@@ -929,16 +935,7 @@ export default function MBBA(){
     try{
       const data=await getSupabase().select('spots','select=*&order=name.asc');
       if(data&&data.length>0){
-        setSpots(data.map(s=>({
-          id:s.id,name:s.name,loc:s.loc,cat:s.cat,
-          outlets:s.outlets||'single',url:s.url||'',
-          halal:s.halal||false,muslimOwned:s.muslim_owned||false,
-          vegan:s.vegan||false,dairyFree:s.dairy_free||false,
-          wins:Number(s.wins)||0,losses:Number(s.losses)||0,
-          weeklyWins:Number(s.weekly_wins)||0,
-          stars:s.star_count>0?Array(s.star_count).fill(s.stars_total/s.star_count):[],
-          tags:{},addedAt:new Date(s.added_at).getTime(),flagged:s.flagged||false,
-        })));
+        setSpots(data.map(mapSpotFromDb));
       }
     }catch(e){console.error('Reload error:',e);}
   },[]);
@@ -1006,23 +1003,20 @@ export default function MBBA(){
     }));
     // Write to Supabase
     const tagList=Object.keys(tags).map(k=>k.split(":")[1]);
-    getSupabase().from('reviews').insert({
+    const db=getSupabase();
+    db.insert('reviews',{
       spot_id:spotId,
       stars,
       tags:tagList,
       session_id:SESSION_ID,
     }).then(async()=>{
-      // Update spot star average
-      const {data}=await getSupabase()
-        .from('reviews')
-        .select('stars')
-        .eq('spot_id',spotId);
+      const data=await db.select('reviews',`select=stars&spot_id=eq.${encodeURIComponent(spotId)}`);
       if(data&&data.length){
-        const avg=data.reduce((a,b)=>a+b.stars,0)/data.length;
-        await getSupabase().from('spots').update({
-          stars_total:avg*data.length,
+        const total=data.reduce((a,b)=>a+(Number(b.stars)||0),0);
+        await db.update('spots',{
+          stars_total:total,
           star_count:data.length,
-        }).eq('id',spotId);
+        },{id:spotId});
       }
     }).catch(err=>console.error('Review write error:',err));
     showToast("Review added");
@@ -1031,14 +1025,14 @@ export default function MBBA(){
   const submitEdit=useCallback((spotId,data)=>{
     setSpots(prev=>prev.map(s=>s.id===spotId?{...s,...data}:s));
     // Write to Supabase (pending review)
-    getSupabase().from('spots').update({
+    getSupabase().update('spots',{
       url:data.url||'',
       loc:data.loc||'',
       halal:data.halal||false,
       muslim_owned:data.muslimOwned||false,
       vegan:data.vegan||false,
       dairy_free:data.dairyFree||false,
-    }).eq('id',spotId).catch(err=>console.error('Edit write error:',err));
+    },{id:spotId}).catch(err=>console.error('Edit write error:',err));
     showToast("Edit applied. Thanks!");
   },[showToast]);
 
@@ -1047,7 +1041,7 @@ export default function MBBA(){
     showToast("Flagged. We will review it.");
     const spot=spots.find(s=>s.id===spotId);
     // Write flag to Supabase
-    getSupabase().from('flags').insert({
+    getSupabase().insert('flags',{
       spot_id:spotId,
       reason,
       other_text:otherText||'',
@@ -1068,35 +1062,36 @@ export default function MBBA(){
     const l=nLoc.toLowerCase();
     if(l.includes("island-wide")||l.includes("islandwide"))outlets="island-wide";
     else if(l.includes("multiple")||l.includes("outlets"))outlets="multiple";
-    const s=mkSpot(Date.now(),nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
+    const tempId=`temp_${Date.now()}`;
+    const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
+    const newSpotData={...mapSpotToDb(tempSpot),outlets};
+    const notifyPayload={type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy};
+
     setFormErr("");setDupWarn(null);
-    setSpots(prev=>{const u=[...prev,s];setPair(randPair(u));return u;});
-    const newSpotData={
-      name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets:nOut,url:nUrl.trim(),
-      halal:nHalal,muslim_owned:nMuslim,vegan:nVegan,dairy_free:nDairy,
-      wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
-    };
+    setSpots(prev=>{const u=[...prev,tempSpot];setPair(randPair(u));return u;});
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
     setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
     showToast("Added to the battle");setSection("battle");
-    // Write to Supabase
-    getSupabase().from('spots').insert(newSpotData).select().then(({data,error})=>{
-      if(!error&&data&&data[0]){
-        const s=data[0];
-        const mapped={
-          id:s.id,name:s.name,loc:s.loc,cat:s.cat,
-          outlets:s.outlets||'single',url:s.url||'',
-          halal:s.halal||false,muslimOwned:s.muslim_owned||false,
-          vegan:s.vegan||false,dairyFree:s.dairy_free||false,
-          wins:0,losses:0,weeklyWins:0,stars:[],tags:{},
-          addedAt:new Date(s.added_at).getTime(),flagged:false,
-        };
-        setSpots(prev=>{const u=[...prev,mapped];setPair(randPair(u));return u;});
+
+    // Write to Supabase, then replace the temporary local item with the saved DB row
+    getSupabase().insert('spots',newSpotData).then(data=>{
+      const saved=Array.isArray(data)?data[0]:data;
+      if(saved){
+        const mapped=mapSpotFromDb(saved);
+        setSpots(prev=>{
+          const u=prev.map(item=>item.id===tempId?mapped:item);
+          setPair(randPair(u));
+          return u;
+        });
       }
-    }).catch(err=>console.error('Add spot error:',err));
+    }).catch(err=>{
+      console.error('Add spot error:',err);
+      setDbError('Add spot saved locally but failed to sync: '+(err?.message||err));
+    });
+
     // Email notification
     fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets:nOut,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy})
+      body:JSON.stringify(notifyPayload)
     }).catch(()=>{});
   },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nVegan,nDairy,nSG,showToast]);
 
