@@ -863,15 +863,22 @@ export default function MBBA(){
   },[]);
 
   async function seedDatabase(){
-    const rows=SEED.map(s=>({
-      name:s.name,loc:s.loc,cat:s.cat,outlets:s.outlets,
-      url:s.url||'',halal:s.halal||false,muslim_owned:s.muslimOwned||false,
-      vegan:s.vegan||false,dairy_free:s.dairyFree||false,
-      wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
-    }));
-    const {data,error}=await getSupabase().from('spots').insert(rows).select();
-    if(!error&&data){
-      const mapped=data.map(s=>({
+    const db=getSupabase();
+    const inserted=[];
+    const batchSize=10;
+    for(let i=0;i<SEED.length;i+=batchSize){
+      const batch=SEED.slice(i,i+batchSize).map(s=>({
+        name:s.name,loc:s.loc,cat:s.cat,outlets:s.outlets,
+        url:s.url||'',halal:s.halal||false,muslim_owned:s.muslimOwned||false,
+        vegan:s.vegan||false,dairy_free:s.dairyFree||false,
+        wins:0,losses:0,weekly_wins:0,stars_total:0,star_count:0,
+      }));
+      const {data,error}=await db.from('spots').insert(batch).select();
+      if(!error&&data)inserted.push(...data);
+      else console.error('Batch error:',error?.message);
+    }
+    if(inserted.length>0){
+      const mapped=inserted.map(s=>({
         id:s.id,name:s.name,loc:s.loc,cat:s.cat,
         outlets:s.outlets||'single',url:s.url||'',
         halal:s.halal||false,muslimOwned:s.muslim_owned||false,
@@ -879,8 +886,10 @@ export default function MBBA(){
         wins:0,losses:0,weeklyWins:0,stars:[],tags:{},
         addedAt:new Date(s.added_at).getTime(),flagged:false,
       }));
-      setSpots(mapped);
-      setPair(randPair(mapped));
+      setSpots(mapped);setPair(randPair(mapped));setDbError(null);
+    }else{
+      setDbError('Seed failed — check Supabase policies.');
+      setSpots(SEED);setPair(randPair(SEED));
     }
   }
 
