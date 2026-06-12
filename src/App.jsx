@@ -14,7 +14,7 @@ const T = {
   font:   "-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif",
 };
 
-const CATS = ["Café","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Hotel"];
+const CATS = ["Café","Restaurant","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Hotel"];
 
 const DESCRIPTORS = {
   Texture: ["Moist","Dense","Light","Cakey","Crusty top","Gooey"],
