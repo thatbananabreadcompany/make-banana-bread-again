@@ -664,60 +664,170 @@ function ReviewSheet({spot,onSubmit,onClose}){
 }
 
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
-function EditSheet({spot,onClose,onSubmit}){
-const [eUrl,setEUrl]=useState(spot.url||'');
-const [eLoc,setELoc]=useState(spot.loc||'');
-const [eCat,setECat]=useState(spot.cat||'');
-const [eHalal,setEHalal]=useState(spot.halal||false);
-const [eMuslim,setEMuslim]=useState(spot.muslimOwned||false);
-const [eVegan,setEVegan]=useState(spot.vegan||false);
-const [eDairy,setEDairy]=useState(spot.dairyFree||false);
-const [eMulti,setEMulti]=useState(spot.multipleOutlets||false);
-const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
-  return(
+function EditSheet({ spot, onClose, onSubmit }) {
+  const [eUrl, setEUrl] = useState(spot.url || "");
+  const [eLoc, setELoc] = useState(spot.loc || "");
+  const [eCat, setECat] = useState(spot.cat || "");
+  const [eHalal, setEHalal] = useState(spot.halal || false);
+  const [eMuslim, setEMuslim] = useState(spot.muslimOwned || false);
+  const [eVegan, setEVegan] = useState(spot.vegan || false);
+  const [eDairy, setEDairy] = useState(spot.dairyFree || false);
+  const [eMulti, setEMulti] = useState(spot.multipleOutlets || false);
+  const [eHidden, setEHidden] = useState(spot.hiddenGem || false);
+
+  return (
     <Sheet onClose={onClose} title="Suggest an edit">
-      <p style={{fontSize:14,fontWeight:600,marginBottom:2}}>{spot.name}</p>
-      <p style={{fontSize:12,color:T.muted,marginBottom:18}}>Help us keep this listing accurate. Updates are sent to our team for review.</p>
-      <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Website or Instagram link</label>
-      <input value={eUrl} onChange={e=>setEUrl(e.target.value)} placeholder="https://instagram.com/thisbrand" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
-      <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Location or area</label>
-      <input value={eLoc} onChange={e=>setELoc(e.target.value)} placeholder="e.g. Joo Chiat" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
-      <label style={{fontSize:11,fontWeight:700,letterSpacing:3,color:T.muted,display:"block",marginTop:16,marginBottom:8}}>
-  CATEGORY
-</label>
+      <p style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>
+        {spot.name}
+      </p>
 
-<label style={{fontSize:11,fontWeight:700,letterSpacing:3,color:T.muted,display:"block",marginTop:16,marginBottom:8}}>
-  TAGS
-</label>
+      <p style={{ fontSize: 12, color: T.muted, marginBottom: 18 }}>
+        Help us keep this listing accurate. Updates are sent to our team for review.
+      </p>
 
-<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-  {[
-    ["Halal",eHalal,setEHalal],
-    ["Muslim-owned",eMuslim,setEMuslim],
-    ["Vegan",eVegan,setEVegan],
-    ["Dairy-free",eDairy,setEDairy],
-    ["Multiple outlets",eMulti,setEMulti],
-    ["Hidden gems",eHidden,setEHidden],
-  ].map(([l,v,s])=>(
-    <Pill key={l} active={v} onClick={()=>s(p=>!p)}>{l}</Pill>
-  ))}
-</div>
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 3,
+          color: T.muted,
+          display: "block",
+          marginBottom: 8,
+        }}
+      >
+        WEBSITE OR INSTAGRAM LINK
+      </label>
 
-      
-      <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8}}>Tags</label>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
-{[
-  ["Halal",eHalal,setEHalal],
-  ["Muslim-owned",eMuslim,setEMuslim],
-  ["Vegan",eVegan,setEVegan],
-  ["Dairy-free",eDairy,setEDairy],
-  ["Multiple outlets",eMulti,setEMulti],
-  ["Hidden gems",eHidden,setEHidden],
-].map(([l,v,s])=>(
-  <Pill key={l} active={v} onClick={()=>s(p=>!p)}>{l}</Pill>
-))}
+      <input
+        value={eUrl}
+        onChange={e => setEUrl(e.target.value)}
+        placeholder="https://instagram.com/..."
+        style={{
+          width: "100%",
+          padding: "13px 16px",
+          borderRadius: 12,
+          border: `1.5px solid ${T.border}`,
+          fontSize: 16,
+          outline: "none",
+          marginBottom: 16,
+        }}
+      />
+
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 3,
+          color: T.muted,
+          display: "block",
+          marginBottom: 8,
+        }}
+      >
+        LOCATION OR AREA
+      </label>
+
+      <input
+        value={eLoc}
+        onChange={e => setELoc(e.target.value)}
+        placeholder="Area / location"
+        style={{
+          width: "100%",
+          padding: "13px 16px",
+          borderRadius: 12,
+          border: `1.5px solid ${T.border}`,
+          fontSize: 16,
+          outline: "none",
+          marginBottom: 16,
+        }}
+      />
+
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 3,
+          color: T.muted,
+          display: "block",
+          marginBottom: 8,
+        }}
+      >
+        CATEGORY
+      </label>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+        {CATS.map(c => (
+          <Pill
+            key={c}
+            active={eCat === c}
+            onClick={() => setECat(c)}
+          >
+            {c}
+          </Pill>
+        ))}
       </div>
-      <button onClick={()=>{onSubmit(spot.id,{url:eUrl,loc:eLoc,cat:eCat,halal:eHalal,muslimOwned:eMuslim,vegan:eVegan,dairyFree:eDairy,multipleOutlets:eMulti,hiddenGem:eHidden});onClose();}}> style={{width:"100%",padding:"14px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font}}>Submit update</button>
+
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 3,
+          color: T.muted,
+          display: "block",
+          marginBottom: 8,
+        }}
+      >
+        TAGS
+      </label>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 22 }}>
+        {[
+          ["Halal", eHalal, setEHalal],
+          ["Muslim-owned", eMuslim, setEMuslim],
+          ["Vegan", eVegan, setEVegan],
+          ["Dairy-free", eDairy, setEDairy],
+          ["Multiple outlets", eMulti, setEMulti],
+          ["Hidden gems", eHidden, setEHidden],
+        ].map(([label, active, setter]) => (
+          <Pill
+            key={label}
+            active={active}
+            onClick={() => setter(prev => !prev)}
+          >
+            {label}
+          </Pill>
+        ))}
+      </div>
+
+      <button
+        onClick={() => {
+          onSubmit(spot.id, {
+            url: eUrl,
+            loc: eLoc,
+            cat: eCat,
+            halal: eHalal,
+            muslimOwned: eMuslim,
+            vegan: eVegan,
+            dairyFree: eDairy,
+            multipleOutlets: eMulti,
+            hiddenGem: eHidden,
+          });
+
+          onClose();
+        }}
+        style={{
+          width: "100%",
+          padding: "14px 16px",
+          borderRadius: 14,
+          border: `2px solid ${T.black}`,
+          background: T.white,
+          color: T.black,
+          fontSize: 16,
+          fontWeight: 800,
+          cursor: "pointer",
+        }}
+      >
+        Submit update
+      </button>
     </Sheet>
   );
 }
