@@ -1306,6 +1306,7 @@ export default function MBBA(){
     .update(
       "spots",
       {
+        name: data.name || "",
         url: data.url || "",
         loc: data.loc || "",
         cat: data.cat || "",
