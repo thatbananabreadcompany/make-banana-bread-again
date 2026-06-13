@@ -732,15 +732,21 @@ function ReviewSheet({spot,onSubmit,onClose}){
 
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
 function EditSheet({ spot, onClose, onSubmit }) {
+  const getInitialOutletType = () => {
+    if (spot.islandWide) return "island";
+    if (spot.multipleOutlets) return "multiple";
+    return "single";
+  };
+
   const [eName, setEName] = useState(spot.name || "");
   const [eUrl, setEUrl] = useState(spot.url || "");
   const [eLoc, setELoc] = useState(spot.loc || "");
   const [eCat, setECat] = useState(spot.cat || "");
+  const [eOutletType, setEOutletType] = useState(getInitialOutletType());
   const [eHalal, setEHalal] = useState(spot.halal || false);
   const [eMuslim, setEMuslim] = useState(spot.muslimOwned || false);
   const [eVegan, setEVegan] = useState(spot.vegan || false);
   const [eDairy, setEDairy] = useState(spot.dairyFree || false);
-  const [eMulti, setEMulti] = useState(spot.multipleOutlets || false);
   const [eHidden, setEHidden] = useState(spot.hiddenGem || false);
 
   return (
@@ -753,16 +759,7 @@ function EditSheet({ spot, onClose, onSubmit }) {
         Help us keep this listing accurate. Updates are sent to our team for review.
       </p>
 
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 3,
-          color: T.muted,
-          display: "block",
-          marginBottom: 8,
-        }}
-      >
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
         NAME
       </label>
 
@@ -781,16 +778,7 @@ function EditSheet({ spot, onClose, onSubmit }) {
         }}
       />
 
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 3,
-          color: T.muted,
-          display: "block",
-          marginBottom: 8,
-        }}
-      >
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
         WEBSITE OR INSTAGRAM LINK
       </label>
 
@@ -809,16 +797,7 @@ function EditSheet({ spot, onClose, onSubmit }) {
         }}
       />
 
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 3,
-          color: T.muted,
-          display: "block",
-          marginBottom: 8,
-        }}
-      >
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
         LOCATION OR AREA
       </label>
 
@@ -837,41 +816,37 @@ function EditSheet({ spot, onClose, onSubmit }) {
         }}
       />
 
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 3,
-          color: T.muted,
-          display: "block",
-          marginBottom: 8,
-        }}
-      >
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
         CATEGORY
       </label>
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
         {CATS.map(c => (
-          <Pill
-            key={c}
-            active={eCat === c}
-            onClick={() => setECat(c)}
-          >
+          <Pill key={c} active={eCat === c} onClick={() => setECat(c)}>
             {c}
           </Pill>
         ))}
       </div>
 
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 3,
-          color: T.muted,
-          display: "block",
-          marginBottom: 8,
-        }}
-      >
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
+        OUTLETS
+      </label>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+        <Pill active={eOutletType === "single"} onClick={() => setEOutletType("single")}>
+          Single location
+        </Pill>
+
+        <Pill active={eOutletType === "multiple"} onClick={() => setEOutletType("multiple")}>
+          Multiple outlets
+        </Pill>
+
+        <Pill active={eOutletType === "island"} onClick={() => setEOutletType("island")}>
+          Island-wide
+        </Pill>
+      </div>
+
+      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: T.muted, display: "block", marginBottom: 8 }}>
         TAGS
       </label>
 
@@ -881,14 +856,9 @@ function EditSheet({ spot, onClose, onSubmit }) {
           ["Muslim-owned", eMuslim, setEMuslim],
           ["Vegan", eVegan, setEVegan],
           ["Dairy-free", eDairy, setEDairy],
-          ["Multiple outlets", eMulti, setEMulti],
           ["Hidden gems", eHidden, setEHidden],
         ].map(([label, active, setter]) => (
-          <Pill
-            key={label}
-            active={active}
-            onClick={() => setter(prev => !prev)}
-          >
+          <Pill key={label} active={active} onClick={() => setter(prev => !prev)}>
             {label}
           </Pill>
         ))}
@@ -901,11 +871,11 @@ function EditSheet({ spot, onClose, onSubmit }) {
             url: eUrl,
             loc: eLoc,
             cat: eCat,
+            outletType: eOutletType,
             halal: eHalal,
             muslimOwned: eMuslim,
             vegan: eVegan,
             dairyFree: eDairy,
-            multipleOutlets: eMulti,
             hiddenGem: eHidden,
           });
 
