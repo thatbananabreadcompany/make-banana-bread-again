@@ -1256,47 +1256,49 @@ export default function MBBA(){
   const editedSpot = spots.find(s => s.id === spotId);
 
   setSpots(prev =>
-    prev.map(s =>
-      s.id === spotId
-        ? {
-            ...s,
-            name: data.name || s.name,
-            url: data.url || "",
-            loc: data.loc || "",
-            cat: data.cat || s.cat,
-            multipleOutlets: data.outletType === "multiple",
-            islandWide: data.outletType === "island",
-            halal: data.halal || false,
-            muslimOwned: data.muslimOwned || false,
-            vegan: data.vegan || false,
-            dairyFree: data.dairyFree || false,
-            multipleOutlets: data.multipleOutlets || false,
-            hiddenGem: data.hiddenGem || false,
-          }
-        : s
-    )
-  );
+  prev.map(s =>
+    s.id === spotId
+      ? {
+          ...s,
+          name: data.name || s.name,
+          url: data.url || "",
+          loc: data.loc || "",
+          cat: data.cat || s.cat,
+
+          multipleOutlets: data.outletType === "multiple",
+          islandWide: data.outletType === "island",
+
+          halal: data.halal || false,
+          muslimOwned: data.muslimOwned || false,
+          vegan: data.vegan || false,
+          dairyFree: data.dairyFree || false,
+          hiddenGem: data.hiddenGem || false,
+        }
+      : s
+  )
+);
 
   getSupabase()
-    .update(
-      "spots",
-      {
-        name: data.name || "",
-        url: data.url || "",
-        loc: data.loc || "",
-        cat: data.cat || "",
-        multipleOutlets: data.outletType === "multiple",
-        islandWide: data.outletType === "island",
-        halal: data.halal || false,
-        muslim_owned: data.muslimOwned || false,
-        vegan: data.vegan || false,
-        dairy_free: data.dairyFree || false,
-        multiple_outlets: data.multipleOutlets || false,
-        hidden_gem: data.hiddenGem || false,
-      },
-      { id: spotId }
-    )
-    .catch(err => console.error("Edit write error", err));
+  .update(
+    "spots",
+    {
+      name: data.name || "",
+      url: data.url || "",
+      loc: data.loc || "",
+      cat: data.cat || "",
+
+      multiple_outlets: data.outletType === "multiple",
+      island_wide: data.outletType === "island",
+
+      halal: data.halal || false,
+      muslim_owned: data.muslimOwned || false,
+      vegan: data.vegan || false,
+      dairy_free: data.dairyFree || false,
+      hidden_gem: data.hiddenGem || false,
+    },
+    { id: spotId }
+  )
+  .catch(err => console.error("Edit write error", err));
 
   fetch("/api/notify", {
     method: "POST",
