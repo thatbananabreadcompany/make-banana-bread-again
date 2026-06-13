@@ -617,15 +617,82 @@ function ShareSheet({spot, votes, isWinner=false, onClose}){
 }
 
 // ── SHEET ─────────────────────────────────────────────────────────────────
-function Sheet({onClose,title,children}){
-  return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.25)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:T.white,borderRadius:"20px 20px 0 0",width:"100%",maxWidth:560,padding:"24px 24px 48px",maxHeight:"88vh",overflowY:"auto"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:22}}>
-          <div style={{width:36,height:4,background:T.border,borderRadius:2}}/>
-          {title&&<span style={{fontSize:15,fontWeight:600}}>{title}</span>}
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:T.muted}}>✕</button>
+function Sheet({ children, onClose, title }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.35)",
+        zIndex: 99999,
+        display: "flex",
+        alignItems: "flex-end",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxHeight: "calc(100dvh - 90px)",
+          background: T.white,
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          padding: "22px 24px 120px",
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          boxSizing: "border-box",
+          position: "relative",
+          zIndex: 100000,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 6,
+            borderRadius: 999,
+            background: T.border,
+            margin: "0 auto 16px",
+          }}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            marginBottom: 24,
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 20,
+              fontWeight: 900,
+              margin: 0,
+              textAlign: "center",
+            }}
+          >
+            {title}
+          </h2>
+
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+              border: "none",
+              background: "transparent",
+              fontSize: 28,
+              color: T.muted,
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
         </div>
+
         {children}
       </div>
     </div>
