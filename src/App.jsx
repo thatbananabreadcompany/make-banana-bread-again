@@ -686,15 +686,14 @@ const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
   CATEGORY
 </label>
 
-<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
-  {CATS.map(c=>(
-    <Pill
-      key={c}
-      active={eCat===c}
-      onClick={()=>setECat(c)}
-    >
-      {c}
-    </Pill>
+<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+  {[
+    ["Halal",eHalal,setEHalal],
+    ["Muslim-owned",eMuslim,setEMuslim],
+    ["Vegan",eVegan,setEVegan],
+    ["Dairy-free",eDairy,setEDairy],
+  ].map(([l,v,s])=>(
+    <Pill key={l} active={v} onClick={()=>s(p=>!p)}>{l}</Pill>
   ))}
 </div>
       
