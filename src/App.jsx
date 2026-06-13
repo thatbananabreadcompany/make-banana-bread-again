@@ -665,14 +665,14 @@ function ReviewSheet({spot,onSubmit,onClose}){
 
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
 function EditSheet({spot,onClose,onSubmit}){
-  const [eUrl,setEUrl]=useState(spot.url||"");
-  const [eLoc,setELoc]=useState(spot.loc==="TBC"?"":spot.loc||"");
-  const [eCat,setECat]=useState(spot.cat||'');
-  const [eHalal,setEHalal]=useState(spot.halal);
-  const [eMuslim,setEMuslim]=useState(spot.muslimOwned);
-  const [eVegan,setEVegan]=useState(spot.vegan);
-  const [eDairy,setEDairy]=useState(spot.dairyFree);
-  const [eMulti,setEMulti]=useState(spot.multipleOutlets||false);
+const [eUrl,setEUrl]=useState(spot.url||'');
+const [eLoc,setELoc]=useState(spot.loc||'');
+const [eCat,setECat]=useState(spot.cat||'');
+const [eHalal,setEHalal]=useState(spot.halal||false);
+const [eMuslim,setEMuslim]=useState(spot.muslimOwned||false);
+const [eVegan,setEVegan]=useState(spot.vegan||false);
+const [eDairy,setEDairy]=useState(spot.dairyFree||false);
+const [eMulti,setEMulti]=useState(spot.multipleOutlets||false);
 const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
   return(
     <Sheet onClose={onClose} title="Suggest an edit">
@@ -700,7 +700,7 @@ const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
       
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8}}>Tags</label>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
-        {[
+{[
   ["Halal",eHalal,setEHalal],
   ["Muslim-owned",eMuslim,setEMuslim],
   ["Vegan",eVegan,setEVegan],
