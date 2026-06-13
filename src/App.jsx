@@ -1265,8 +1265,14 @@ export default function MBBA(){
           loc: data.loc || "",
           cat: data.cat || s.cat,
 
-          multipleOutlets: data.outletType === "multiple",
-          islandWide: data.outletType === "island",
+          outlets:
+  data.outletType === "island"
+    ? "Island-wide"
+    : data.outletType === "multiple"
+    ? "Multiple outlets"
+    : "Single location",
+
+multipleOutlets: data.outletType === "multiple",
 
           halal: data.halal || false,
           muslimOwned: data.muslimOwned || false,
@@ -1287,8 +1293,14 @@ export default function MBBA(){
       loc: data.loc || "",
       cat: data.cat || "",
 
-      multiple_outlets: data.outletType === "multiple",
-      island_wide: data.outletType === "island",
+outlets:
+  data.outletType === "island"
+    ? "Island-wide"
+    : data.outletType === "multiple"
+    ? "Multiple outlets"
+    : "Single location",
+
+multiple_outlets: data.outletType === "multiple",
 
       halal: data.halal || false,
       muslim_owned: data.muslimOwned || false,
