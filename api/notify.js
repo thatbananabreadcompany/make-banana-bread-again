@@ -1,10 +1,20 @@
-// api/notify.js - Resend email notifications for MBBA
+// api/notify.js - MBBA email notifications + backend flag creation
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
 const TO_EMAIL =
   process.env.ADMIN_EMAIL || "thatbananabreadcompany@gmail.com";
+
 const FROM_EMAIL =
   process.env.FROM_EMAIL || "MBBA <onboarding@resend.dev>";
+
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ROLE_KEY ||
+  process.env.SERVICE_ROLE_KEY;
 
 function safe(value) {
   if (value === null || value === undefined || value === "") return "—";
@@ -15,6 +25,51 @@ function safe(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+async function createFlag({ spotId, reason, otherText }) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("Missing Supabase backend env vars", {
+      hasUrl: Boolean(SUPABASE_URL),
+      hasServiceKey: Boolean(SUPABASE_SERVICE_ROLE_KEY),
+    });
+    return null;
+  }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/flags`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      spot_id: spotId,
+      reason: reason || "Other",
+      other_text: otherText || "",
+    }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    console.error("Supabase flag insert error:", text);
+    return null;
+  }
+
+  if (!text) {
+    console.error("Supabase insert returned empty response");
+    return null;
+  }
+
+  try {
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data[0] : data;
+  } catch (err) {
+    console.error("Flag JSON parse error:", err, text);
+    return null;
+  }
 }
 
 async function sendEmail(subject, html, text) {
@@ -60,20 +115,27 @@ export default async function handler(req, res) {
       spot,
       reason,
       otherText,
-      flagId,
       spotId,
       location,
       category,
       url,
     } = req.body || {};
 
-    const isFlag = type === "flag" || reason || spotId;
+    const isFlag = type === "flag" || Boolean(reason) || Boolean(spotId);
 
-    let subject;
-    let html;
-    let text;
+    let subject = "";
+    let html = "";
+    let text = "";
 
     if (isFlag) {
+      const insertedFlag = await createFlag({
+        spotId,
+        reason,
+        otherText,
+      });
+
+      const flagId = insertedFlag?.id;
+
       const cleanFlagId = safe(flagId);
       const cleanSpotId = safe(spotId);
       const cleanSpot = safe(spot || `Spot ID ${spotId}`);
@@ -98,30 +160,37 @@ export default async function handler(req, res) {
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold; width: 35%;">Flag ID</td>
               <td style="padding: 10px; background: #f3f3f3;">${cleanFlagId}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; font-weight: bold;">Spot ID</td>
               <td style="padding: 10px;">${cleanSpotId}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Spot</td>
               <td style="padding: 10px; background: #f3f3f3;">${cleanSpot}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; font-weight: bold;">Location</td>
               <td style="padding: 10px;">${cleanLocation}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Category</td>
               <td style="padding: 10px; background: #f3f3f3;">${cleanCategory}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; font-weight: bold;">Reason</td>
               <td style="padding: 10px;">${cleanReason}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Details</td>
               <td style="padding: 10px; background: #f3f3f3;">${cleanDetails}</td>
             </tr>
+
             ${
               url
                 ? `
@@ -137,7 +206,10 @@ export default async function handler(req, res) {
           </table>
 
           <div style="margin-top: 24px; padding: 16px; background: #fff3f3; border-left: 4px solid #d33; border-radius: 8px;">
-            <p style="margin: 0 0 8px 0;"><strong>Resolve this flag in Supabase:</strong></p>
+            <p style="margin: 0 0 8px 0;">
+              <strong>Resolve this flag in Supabase:</strong>
+            </p>
+
             <code style="display: block; white-space: pre-wrap; background: #eee; padding: 12px; border-radius: 8px; color: #111;">
 update flags set resolved = true where id = ${cleanFlagId};
             </code>
@@ -178,14 +250,17 @@ Sent from makebananabreadagain.com
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Type</td>
               <td style="padding: 10px; background: #f3f3f3;">${safe(type)}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; font-weight: bold;">Name</td>
               <td style="padding: 10px;">${safe(name)}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Email</td>
               <td style="padding: 10px; background: #f3f3f3;">${safe(email)}</td>
             </tr>
+
             <tr>
               <td style="padding: 10px; font-weight: bold;">Message</td>
               <td style="padding: 10px;">${safe(message)}</td>
