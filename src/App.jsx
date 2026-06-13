@@ -1185,34 +1185,46 @@ export default function MBBA(){
     showToast("Review added");
   },[showToast]);
 
-  const submitEdit=useCallback((spotId,data)=>{
-  setSpots(prev=>prev.map(s=>s.id===spotId?{
-    ...s,
-    url:data.url||'',
-    loc:data.loc||'',
-    cat:data.cat||s.cat,
-    halal:data.halal||false,
-    muslimOwned:data.muslimOwned||false,
-    vegan:data.vegan||false,
-    dairyFree:data.dairyFree||false,
-    multipleOutlets:data.multipleOutlets||false,
-    hiddenGem:data.hiddenGem||false,
-  }:s));
+  const submitEdit = useCallback((spotId, data) => {
+  setSpots(prev =>
+    prev.map(s =>
+      s.id === spotId
+        ? {
+            ...s,
+            url: data.url || "",
+            loc: data.loc || "",
+            cat: data.cat || s.cat,
+            halal: data.halal || false,
+            muslimOwned: data.muslimOwned || false,
+            vegan: data.vegan || false,
+            dairyFree: data.dairyFree || false,
+            multipleOutlets: data.multipleOutlets || false,
+            hiddenGem: data.hiddenGem || false,
+          }
+        : s
+    )
+  );
 
-  getSupabase().update('spots',{
-    url:data.url||'',
-    loc:data.loc||'',
-    cat:data.cat||'',
-    halal:data.halal||false,
-    muslim_owned:data.muslimOwned||false,
-    vegan:data.vegan||false,
-    dairy_free:data.dairyFree||false,
-    multiple_outlets:data.multipleOutlets||false,
-    hidden_gem:data.hiddenGem||false,
-  },{id:spotId}).catch(err=>console.error('Edit write error',err));
+  getSupabase()
+    .update(
+      "spots",
+      {
+        url: data.url || "",
+        loc: data.loc || "",
+        cat: data.cat || "",
+        halal: data.halal || false,
+        muslim_owned: data.muslimOwned || false,
+        vegan: data.vegan || false,
+        dairy_free: data.dairyFree || false,
+        multiple_outlets: data.multipleOutlets || false,
+        hidden_gem: data.hiddenGem || false,
+      },
+      { id: spotId }
+    )
+    .catch(err => console.error("Edit write error", err));
 
   showToast("Thanks for the update. We’ll review it soon.");
-},[showToast]);
+}, [showToast]);
 
   const flagListing = useCallback((spotId, reason, otherText) => {
   setSpots(prev =>
