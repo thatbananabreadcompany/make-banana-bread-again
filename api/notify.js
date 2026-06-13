@@ -113,18 +113,17 @@ export default async function handler(req, res) {
       email,
       message,
 
-      // Shared listing fields
       spot,
       spotId,
       location,
       category,
       url,
 
-      // Flag fields
       reason,
       otherText,
 
-      // Edit fields
+      oldName,
+      newName,
       oldLocation,
       newLocation,
       oldCategory,
@@ -255,8 +254,10 @@ update flags set resolved = true where id = ${cleanFlagId};
 Sent from makebananabreadagain.com
       `;
     } else if (type === "edit") {
-      const cleanSpot = safe(spot || `Spot ID ${spotId}`);
+      const cleanSpot = safe(spot || newName || `Spot ID ${spotId}`);
       const cleanSpotId = safe(spotId);
+      const cleanOldName = safe(oldName);
+      const cleanNewName = safe(newName || spot);
       const cleanOldLocation = safe(oldLocation);
       const cleanNewLocation = safe(newLocation || location);
       const cleanOldCategory = safe(oldCategory);
@@ -293,6 +294,16 @@ Sent from makebananabreadagain.com
             <tr>
               <td style="padding: 10px; font-weight: bold;">Spot ID</td>
               <td style="padding: 10px;">${cleanSpotId}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Old name</td>
+              <td style="padding: 10px; background: #f3f3f3;">${cleanOldName}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">New name</td>
+              <td style="padding: 10px;">${cleanNewName}</td>
             </tr>
 
             <tr>
@@ -344,6 +355,8 @@ Sent from makebananabreadagain.com
 Listing edit submitted: ${cleanSpot}
 
 Spot ID: ${cleanSpotId}
+Old name: ${cleanOldName}
+New name: ${cleanNewName}
 Old location: ${cleanOldLocation}
 New location: ${cleanNewLocation}
 Old category: ${cleanOldCategory}
@@ -413,5 +426,5 @@ Sent from makebananabreadagain.com
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
     });
-  } 
+  }
 }
