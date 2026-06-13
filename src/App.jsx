@@ -674,7 +674,7 @@ function EditSheet({spot,onClose,onSubmit}){
   return(
     <Sheet onClose={onClose} title="Suggest an edit">
       <p style={{fontSize:14,fontWeight:600,marginBottom:2}}>{spot.name}</p>
-      <p style={{fontSize:12,color:T.muted,marginBottom:18}}>Suggestions go to our team before going live.</p>
+      <p style={{fontSize:12,color:T.muted,marginBottom:18}}>Help us keep this listing accurate. Updates are sent to our team for review.</p>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Website or Instagram link</label>
       <input value={eUrl} onChange={e=>setEUrl(e.target.value)} placeholder="https://instagram.com/thisbrand" style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:14}}/>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:6}}>Location or area</label>
