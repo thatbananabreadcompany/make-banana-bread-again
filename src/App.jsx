@@ -1255,7 +1255,7 @@ export default function MBBA(){
   const submitEdit = useCallback((spotId, data) => {
   const editedSpot = spots.find(s => s.id === spotId);
 
-  setSpots(prev =>
+ setSpots(prev =>
   prev.map(s =>
     s.id === spotId
       ? {
