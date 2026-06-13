@@ -1036,21 +1036,50 @@ export default function MBBA(){
     showToast("Edit applied. Thanks!");
   },[showToast]);
 
-  const flagListing=useCallback((spotId,reason,otherText)=>{
-    setSpots(prev=>prev.map(s=>s.id===spotId?{...s,flagged:true}:s));
-    showToast("Flagged. We will review it.");
-    const spot=spots.find(s=>s.id===spotId);
-    // Write flag to Supabase
-    getSupabase().insert('flags',{
-      spot_id:spotId,
+  const flagListing = useCallback((spotId, reason, otherText) => {
+  setSpots(prev =>
+    prev.map(s =>
+      s.id === spotId ? { ...s, flagged: true } : s
+    )
+  );
+
+  showToast("Flagged. We will review it.");
+
+  const spot = spots.find(s => s.id === spotId);
+
+  getSupabase()
+    .insert("flags", {
+      spot_id: spotId,
       reason,
-      other_text:otherText||'',
-    }).catch(err=>console.error('Flag write error:',err));
-    // Send email notification
-    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"flag",spotName:spot?.name||"Unknown",spotLoc:spot?.loc||"",reason,otherText:otherText||""})
-    }).catch(()=>{});
-  },[showToast,spots]);
+      other_text: otherText || "",
+    })
+    .then(insertedFlags => {
+      const insertedFlag = Array.isArray(insertedFlags)
+        ? insertedFlags[0]
+        : insertedFlags;
+
+      return fetch("/api/notify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "flag",
+          flagId: insertedFlag?.id,
+          spotId,
+          spot: spot?.name || "",
+          location: spot?.loc || "",
+          category: spot?.cat || "",
+          url: spot?.url || "",
+          reason,
+          otherText: otherText || "",
+        }),
+      });
+    })
+    .catch(err => {
+      console.error("Flag write/email error", err);
+    });
+}, [showToast, spots]);
 
   const submitSpot=useCallback(()=>{
     // Rate limiting handled server-side via Supabase RLS + IP check
