@@ -733,8 +733,8 @@ function ReviewSheet({spot,onSubmit,onClose}){
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
 function EditSheet({ spot, onClose, onSubmit }) {
   const getInitialOutletType = () => {
-if (spot.outlets === "Island-wide") return "island";
-if (spot.multipleOutlets || spot.outlets === "Multiple outlets") return "multiple";
+if (spot.outlets === "island-wide") return "island";
+if (spot.outlets === "multiple" || spot.multipleOutlets) return "multiple";
 return "single";
   };
 
