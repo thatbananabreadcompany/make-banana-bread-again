@@ -1289,9 +1289,36 @@ export default function MBBA(){
       { id: spotId }
     )
     .catch(err => console.error("Edit write error", err));
+    
+    const editedSpot = spots.find(s => s.id === spotId);
+
+fetch("/api/notify", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    type: "edit",
+    spotId,
+    spot: editedSpot?.name || "",
+    oldLocation: editedSpot?.loc || "",
+    newLocation: data.loc || "",
+    oldCategory: editedSpot?.cat || "",
+    newCategory: data.cat || "",
+    url: data.url || "",
+    halal: data.halal || false,
+    muslimOwned: data.muslimOwned || false,
+    vegan: data.vegan || false,
+    dairyFree: data.dairyFree || false,
+    multipleOutlets: data.multipleOutlets || false,
+    hiddenGem: data.hiddenGem || false,
+  }),
+}).catch(err => {
+  console.error("Edit email error", err);
+});
 
   showToast("Thanks for the update. We’ll review it soon.");
-}, [showToast]);
+}, [showToast, spots]);
 
   const flagListing = useCallback((spotId, reason, otherText) => {
   setSpots(prev =>
