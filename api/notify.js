@@ -112,16 +112,32 @@ export default async function handler(req, res) {
       name,
       email,
       message,
+
+      // Shared listing fields
       spot,
-      reason,
-      otherText,
       spotId,
       location,
       category,
       url,
+
+      // Flag fields
+      reason,
+      otherText,
+
+      // Edit fields
+      oldLocation,
+      newLocation,
+      oldCategory,
+      newCategory,
+      halal,
+      muslimOwned,
+      vegan,
+      dairyFree,
+      multipleOutlets,
+      hiddenGem,
     } = req.body || {};
 
-    const isFlag = type === "flag" || Boolean(reason) || Boolean(spotId);
+    const isFlag = type === "flag";
 
     let subject = "";
     let html = "";
@@ -235,6 +251,105 @@ URL: ${cleanUrl}
 
 Resolve in Supabase:
 update flags set resolved = true where id = ${cleanFlagId};
+
+Sent from makebananabreadagain.com
+      `;
+    } else if (type === "edit") {
+      const cleanSpot = safe(spot || `Spot ID ${spotId}`);
+      const cleanSpotId = safe(spotId);
+      const cleanOldLocation = safe(oldLocation);
+      const cleanNewLocation = safe(newLocation || location);
+      const cleanOldCategory = safe(oldCategory);
+      const cleanNewCategory = safe(newCategory || category);
+      const cleanUrl = safe(url);
+
+      const tagList = [
+        halal ? "Halal" : null,
+        muslimOwned ? "Muslim-owned" : null,
+        vegan ? "Vegan" : null,
+        dairyFree ? "Dairy-free" : null,
+        multipleOutlets ? "Multiple outlets" : null,
+        hiddenGem ? "Hidden gems" : null,
+      ].filter(Boolean);
+
+      const cleanTags = safe(
+        tagList.length ? tagList.join(", ") : "None selected"
+      );
+
+      subject = `✏️ Listing edit submitted: ${cleanSpot}`;
+
+      html = `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111; line-height: 1.5;">
+          <h2 style="margin-bottom: 8px;">✏️ Listing edit submitted: ${cleanSpot}</h2>
+
+          <p style="margin-top: 0;">Someone submitted an update for this MBBA listing.</p>
+
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr>
+              <td style="padding: 10px; background: #f3f3f3; font-weight: bold; width: 35%;">Spot</td>
+              <td style="padding: 10px; background: #f3f3f3;">${cleanSpot}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">Spot ID</td>
+              <td style="padding: 10px;">${cleanSpotId}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Old location</td>
+              <td style="padding: 10px; background: #f3f3f3;">${cleanOldLocation}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">New location</td>
+              <td style="padding: 10px;">${cleanNewLocation}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Old category</td>
+              <td style="padding: 10px; background: #f3f3f3;">${cleanOldCategory}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">New category</td>
+              <td style="padding: 10px;">${cleanNewCategory}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px; background: #f3f3f3; font-weight: bold;">Tags selected</td>
+              <td style="padding: 10px; background: #f3f3f3;">${cleanTags}</td>
+            </tr>
+
+            ${
+              url
+                ? `
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">Link</td>
+              <td style="padding: 10px;">
+                <a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>
+              </td>
+            </tr>
+            `
+                : ""
+            }
+          </table>
+
+          <p style="margin-top: 24px; font-size: 13px; color: #777;">
+            Sent from <a href="https://makebananabreadagain.com">makebananabreadagain.com</a>
+          </p>
+        </div>
+      `;
+
+      text = `
+Listing edit submitted: ${cleanSpot}
+
+Spot ID: ${cleanSpotId}
+Old location: ${cleanOldLocation}
+New location: ${cleanNewLocation}
+Old category: ${cleanOldCategory}
+New category: ${cleanNewCategory}
+Tags selected: ${cleanTags}
+Link: ${cleanUrl}
 
 Sent from makebananabreadagain.com
       `;
