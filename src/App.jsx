@@ -1047,24 +1047,35 @@ export default function MBBA(){
 
   const spot = spots.find(s => s.id === spotId);
 
-  getSupabase()
-    .insert("flags", {
-      spot_id: spotId,
-      reason,
-      other_text: otherText || "",
-    })
-    .then(insertedFlags => {
-      const insertedFlag = Array.isArray(insertedFlags)
+  async function saveFlagAndNotify() {
+    let insertedFlag = null;
+
+    try {
+      const insertedFlags = await getSupabase().insert("flags", {
+        spot_id: spotId,
+        reason,
+        other_text: otherText || "",
+      });
+
+      insertedFlag = Array.isArray(insertedFlags)
         ? insertedFlags[0]
         : insertedFlags;
 
-      return fetch("/api/notify", {
+      console.log("Flag inserted:", insertedFlag);
+    } catch (err) {
+      console.error("Flag write error", err);
+    }
+
+    try {
+      const notifyRes = await fetch("/api/notify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           type: "flag",
+
+          // New fields
           flagId: insertedFlag?.id,
           spotId,
           spot: spot?.name || "",
@@ -1073,12 +1084,26 @@ export default function MBBA(){
           url: spot?.url || "",
           reason,
           otherText: otherText || "",
+
+          // Backward-compatible fields, just in case old backend still uses these
+          spotName: spot?.name || "",
+          spotLoc: spot?.loc || "",
+          message: otherText || "",
         }),
       });
-    })
-    .catch(err => {
-      console.error("Flag write/email error", err);
-    });
+
+      if (!notifyRes.ok) {
+        const notifyError = await notifyRes.text();
+        console.error("Notify error", notifyError);
+      } else {
+        console.log("Flag notification sent");
+      }
+    } catch (err) {
+      console.error("Flag email error", err);
+    }
+  }
+
+  saveFlagAndNotify();
 }, [showToast, spots]);
 
   const submitSpot=useCallback(()=>{
