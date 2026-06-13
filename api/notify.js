@@ -413,5 +413,5 @@ Sent from makebananabreadagain.com
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
     });
-  }
+  } 
 }
