@@ -732,6 +732,7 @@ function ReviewSheet({spot,onSubmit,onClose}){
 
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
 function EditSheet({ spot, onClose, onSubmit }) {
+  const [eName, setEName] = useState(spot.name || "");
   const [eUrl, setEUrl] = useState(spot.url || "");
   const [eLoc, setELoc] = useState(spot.loc || "");
   const [eCat, setECat] = useState(spot.cat || "");
@@ -751,6 +752,34 @@ function EditSheet({ spot, onClose, onSubmit }) {
       <p style={{ fontSize: 12, color: T.muted, marginBottom: 18 }}>
         Help us keep this listing accurate. Updates are sent to our team for review.
       </p>
+
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 3,
+          color: T.muted,
+          display: "block",
+          marginBottom: 8,
+        }}
+      >
+        NAME
+      </label>
+
+      <input
+        value={eName}
+        onChange={e => setEName(e.target.value)}
+        placeholder="Listing name"
+        style={{
+          width: "100%",
+          padding: "13px 16px",
+          borderRadius: 12,
+          border: `1.5px solid ${T.border}`,
+          fontSize: 16,
+          outline: "none",
+          marginBottom: 16,
+        }}
+      />
 
       <label
         style={{
@@ -868,6 +897,7 @@ function EditSheet({ spot, onClose, onSubmit }) {
       <button
         onClick={() => {
           onSubmit(spot.id, {
+            name: eName,
             url: eUrl,
             loc: eLoc,
             cat: eCat,
