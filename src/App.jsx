@@ -1284,24 +1284,24 @@ export default function MBBA(){
 
   const submitEdit = useCallback((spotId, data) => {
   setSpots(prev =>
-    prev.map(s =>
-      s.id === spotId
-        ? {
-            ...s,
-            url: data.url || "",
-            loc: data.loc || "",
-            cat: data.cat || s.cat,
-            halal: data.halal || false,
-            muslimOwned: data.muslimOwned || false,
-            vegan: data.vegan || false,
-            dairyFree: data.dairyFree || false,
-            multipleOutlets: data.multipleOutlets || false,
-            hiddenGem: data.hiddenGem || false,
-          }
-        : s
-    )
-  );
-
+  prev.map(s =>
+    s.id === spotId
+      ? {
+          ...s,
+          name: data.name || s.name,
+          url: data.url || "",
+          loc: data.loc || "",
+          cat: data.cat || s.cat,
+          halal: data.halal || false,
+          muslimOwned: data.muslimOwned || false,
+          vegan: data.vegan || false,
+          dairyFree: data.dairyFree || false,
+          multipleOutlets: data.multipleOutlets || false,
+          hiddenGem: data.hiddenGem || false,
+        }
+      : s
+  )
+);
   getSupabase()
     .update(
       "spots",
