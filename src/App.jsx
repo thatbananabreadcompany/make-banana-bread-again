@@ -154,14 +154,33 @@ const sbDb = {
     return res.json();
   },
   async insert(table, data) {
-    const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: SB_HEADERS,
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  },
+  const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      ...SB_HEADERS,
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Insert failed for ${table}`);
+  }
+
+  const text = await res.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.error('Insert response parse error', err, text);
+    return null;
+  }
+},
   async update(table, data, match) {
     const query = Object.entries(match)
       .map(([k,v])=>`${encodeURIComponent(k)}=eq.${encodeURIComponent(v)}`)
