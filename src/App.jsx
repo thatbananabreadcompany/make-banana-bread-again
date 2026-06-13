@@ -686,16 +686,23 @@ const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
   CATEGORY
 </label>
 
+<label style={{fontSize:11,fontWeight:700,letterSpacing:3,color:T.muted,display:"block",marginTop:16,marginBottom:8}}>
+  TAGS
+</label>
+
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
   {[
     ["Halal",eHalal,setEHalal],
     ["Muslim-owned",eMuslim,setEMuslim],
     ["Vegan",eVegan,setEVegan],
     ["Dairy-free",eDairy,setEDairy],
+    ["Multiple outlets",eMulti,setEMulti],
+    ["Hidden gems",eHidden,setEHidden],
   ].map(([l,v,s])=>(
     <Pill key={l} active={v} onClick={()=>s(p=>!p)}>{l}</Pill>
   ))}
 </div>
+
       
       <label style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8}}>Tags</label>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
