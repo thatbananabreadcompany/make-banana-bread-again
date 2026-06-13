@@ -218,7 +218,7 @@ function mapSpotFromDb(s){
     vegan:!!s.vegan,
     dairyFree:!!s.dairy_free,
     multipleOutlets: s.multiple_outlets || false,
-hiddenGem: s.hidden_gem || false,
+    hiddenGem: s.hidden_gem || false,
     wins:Number(s.wins)||0,
     losses:Number(s.losses)||0,
     weeklyWins:Number(s.weekly_wins)||0,
