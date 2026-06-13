@@ -1066,63 +1066,24 @@ export default function MBBA(){
 
   const spot = spots.find(s => s.id === spotId);
 
-  async function saveFlagAndNotify() {
-    let insertedFlag = null;
-
-    try {
-      const insertedFlags = await getSupabase().insert("flags", {
-        spot_id: spotId,
-        reason,
-        other_text: otherText || "",
-      });
-
-      insertedFlag = Array.isArray(insertedFlags)
-        ? insertedFlags[0]
-        : insertedFlags;
-
-      console.log("Flag inserted:", insertedFlag);
-    } catch (err) {
-      console.error("Flag write error", err);
-    }
-
-    try {
-      const notifyRes = await fetch("/api/notify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "flag",
-
-          // New fields
-          flagId: insertedFlag?.id,
-          spotId,
-          spot: spot?.name || "",
-          location: spot?.loc || "",
-          category: spot?.cat || "",
-          url: spot?.url || "",
-          reason,
-          otherText: otherText || "",
-
-          // Backward-compatible fields, just in case old backend still uses these
-          spotName: spot?.name || "",
-          spotLoc: spot?.loc || "",
-          message: otherText || "",
-        }),
-      });
-
-      if (!notifyRes.ok) {
-        const notifyError = await notifyRes.text();
-        console.error("Notify error", notifyError);
-      } else {
-        console.log("Flag notification sent");
-      }
-    } catch (err) {
-      console.error("Flag email error", err);
-    }
-  }
-
-  saveFlagAndNotify();
+  fetch("/api/notify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      type: "flag",
+      spotId,
+      spot: spot?.name || "",
+      location: spot?.loc || "",
+      category: spot?.cat || "",
+      url: spot?.url || "",
+      reason,
+      otherText: otherText || "",
+    }),
+  }).catch(err => {
+    console.error("Flag email/save error", err);
+  });
 }, [showToast, spots]);
 
   const submitSpot=useCallback(()=>{
