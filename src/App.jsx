@@ -867,17 +867,17 @@ return "single";
       <button
         onClick={() => {
           onSubmit(spot.id, {
-            name: eName,
-            url: eUrl,
-            loc: eLoc,
-            cat: eCat,
-            outletType: eOutletType,
-            halal: eHalal,
-            muslimOwned: eMuslim,
-            vegan: eVegan,
-            dairyFree: eDairy,
-            hiddenGem: eHidden,
-          });
+  name: eName,
+  url: eUrl,
+  loc: eLoc,
+  cat: eCat,
+  outletType: eOutletType,
+  halal: eHalal,
+  muslimOwned: eMuslim,
+  vegan: eVegan,
+  dairyFree: eDairy,
+  hiddenGem: eHidden,
+});
 
           onClose();
         }}
@@ -1266,14 +1266,14 @@ export default function MBBA(){
           cat: data.cat || s.cat,
 
           outlets:
-  data.outletType === "island"
-    ? "Island-wide"
-    : data.outletType === "multiple"
-    ? "Multiple outlets"
-    : "Single location",
+          data.outletType === "island"
+          ? "Island-wide"
+          : data.outletType === "multiple"
+          ? "Multiple outlets"
+          : "Single location",
 
-multipleOutlets: data.outletType === "multiple",
-
+          multipleOutlets: data.outletType === "multiple",
+          
           halal: data.halal || false,
           muslimOwned: data.muslimOwned || false,
           vegan: data.vegan || false,
@@ -1293,14 +1293,14 @@ multipleOutlets: data.outletType === "multiple",
       loc: data.loc || "",
       cat: data.cat || "",
 
-outlets:
-  data.outletType === "island"
-    ? "Island-wide"
-    : data.outletType === "multiple"
-    ? "Multiple outlets"
-    : "Single location",
+      outlets:
+      data.outletType === "island"
+      ? "Island-wide"
+      : data.outletType === "multiple"
+      ? "Multiple outlets"
+      : "Single location",
 
-multiple_outlets: data.outletType === "multiple",
+      multiple_outlets: data.outletType === "multiple",
 
       halal: data.halal || false,
       muslim_owned: data.muslimOwned || false,
