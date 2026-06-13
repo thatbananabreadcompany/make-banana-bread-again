@@ -733,9 +733,9 @@ function ReviewSheet({spot,onSubmit,onClose}){
 // ── EDIT SHEET ────────────────────────────────────────────────────────────
 function EditSheet({ spot, onClose, onSubmit }) {
   const getInitialOutletType = () => {
-    if (spot.islandWide) return "island";
-    if (spot.multipleOutlets) return "multiple";
-    return "single";
+if (spot.outlets === "Island-wide") return "island";
+if (spot.multipleOutlets || spot.outlets === "Multiple outlets") return "multiple";
+return "single";
   };
 
   const [eName, setEName] = useState(spot.name || "");
