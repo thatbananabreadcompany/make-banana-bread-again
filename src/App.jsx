@@ -711,7 +711,7 @@ const [eHidden,setEHidden]=useState(spot.hiddenGem||false);
   <Pill key={l} active={v} onClick={()=>s(p=>!p)}>{l}</Pill>
 ))}
       </div>
-      <button onClick={()=>{onSubmit(spot.id,{url:eUrl,loc:eLoc||spot.loc,halal:eHalal,muslimOwned:eMuslim,vegan:eVegan,dairyFree:eDairy});onClose();}} style={{width:"100%",padding:"14px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font}}>Submit suggestion</button>
+      <button onClick={()=>{onSubmit(spot.id,{url:eUrl,loc:eLoc,cat:eCat,halal:eHalal,muslimOwned:eMuslim,vegan:eVegan,dairyFree:eDairy,multipleOutlets:eMulti,hiddenGem:eHidden});onClose();}}> style={{width:"100%",padding:"14px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font}}>Submit update</button>
     </Sheet>
   );
 }
