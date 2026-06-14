@@ -1116,11 +1116,10 @@ export default function MBBA(){
   const [nCat,setNCat]=useState("Café");
   const [nOut,setNOut]=useState("single");
   const [nHalal,setNHalal]=useState(false);
-const [nMuslim,setNMuslim]=useState(false);
-const [nNoPorkLard,setNNoPorkLard]=useState(false);
-const [nVegan,setNVegan]=useState(false);
-const [nDairy,setNDairy]=useState(false);
-const [nHidden,setNHidden]=useState(false);
+  const [nMuslim,setNMuslim]=useState(false);
+  const [nVegan,setNVegan]=useState(false);
+  const [nDairy,setNDairy]=useState(false);
+  const [nSG,setNSG]=useState(false);
   const [formErr,setFormErr]=useState("");
   const [fbName,setFbName]=useState("");
   const [fbEmail,setFbEmail]=useState("");
