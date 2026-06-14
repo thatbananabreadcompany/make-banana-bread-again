@@ -1456,7 +1456,7 @@ setNSG(false);
     fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify(notifyPayload)
     }).catch(()=>{});
-  },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nNoPorkLard,nVegan,nDairy,nSG,showToast]);
+  },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nVegan,nDairy,nSG,showToast]);
 
   const submitFeedback=useCallback(async()=>{
     if(!fbMsg.trim()){setFbErr("Please write your message.");return;}
