@@ -1267,68 +1267,66 @@ export default function MBBA(){
     showToast("Review added");
   },[showToast]);
 
-  const submitEdit = useCallback((spotId, data) => {
+const submitEdit = useCallback((spotId, data) => {
   const editedSpot = spots.find(s => s.id === spotId);
 
- setSpots(prev =>
-  prev.map(s =>
-    s.id === spotId
-      ? {
-          ...s,
-          name: data.name || s.name,
-          url: data.url || "",
-          loc: data.loc || "",
-          cat: data.cat || s.cat,
+  const nextOutlets =
+    data.outletType === "island"
+      ? "island-wide"
+      : data.outletType === "multiple"
+      ? "multiple"
+      : "single";
 
-          outlets:
-  data.outletType === "island"
-    ? "island-wide"
-    : data.outletType === "multiple"
-    ? "multiple"
-    : "single",
+  const nextMultipleOutlets = data.outletType === "multiple";
 
-multipleOutlets: data.outletType === "multiple",
-          
-       halal: data.halal || false,
-muslimOwned: data.muslimOwned || false,
-noPorkLard: data.noPorkLard || false,
-vegan: data.vegan || false,
-dairyFree: data.dairyFree || false,
-hiddenGem: data.hiddenGem || false,
-        }
-      : s
-  )
-);
+  // Update the frontend immediately
+  setSpots(prev =>
+    prev.map(s =>
+      s.id === spotId
+        ? {
+            ...s,
+            name: data.name || s.name,
+            url: data.url || "",
+            loc: data.loc || "",
+            cat: data.cat || s.cat,
+            outlets: nextOutlets,
+            multipleOutlets: nextMultipleOutlets,
 
+            halal: data.halal || false,
+            muslimOwned: data.muslimOwned || false,
+            noPorkLard: data.noPorkLard || false,
+            vegan: data.vegan || false,
+            dairyFree: data.dairyFree || false,
+            hiddenGem: data.hiddenGem || false,
+          }
+        : s
+    )
+  );
+
+  // Save to Supabase
   getSupabase()
-  .update(
-    "spots",
-    {
-      name: data.name || "",
-      url: data.url || "",
-      loc: data.loc || "",
-      cat: data.cat || "",
+    .update(
+      "spots",
+      {
+        name: data.name || "",
+        url: data.url || "",
+        loc: data.loc || "",
+        cat: data.cat || "",
+        outlets: nextOutlets,
+        multiple_outlets: nextMultipleOutlets,
 
-      outlets:
-  data.outletType === "island"
-    ? "island-wide"
-    : data.outletType === "multiple"
-    ? "multiple"
-    : "single",
+        halal: data.halal || false,
+        muslim_owned: data.muslimOwned || false,
+        no_pork_lard: data.noPorkLard || false,
+        vegan: data.vegan || false,
+        dairy_free: data.dairyFree || false,
+        hidden_gem: data.hiddenGem || false,
+      },
+      { id: spotId }
+    )
+    .catch(err => console.error("Edit write error", err));
 
-multipleOutlets: data.outletType === "multiple",
-
-   halal: data.halal || false,
-muslim_owned: data.muslimOwned || false,
-no_pork_lard: data.noPorkLard || false,
-vegan: data.vegan || false,
-dairy_free: data.dairyFree || false,
-hidden_gem: data.hiddenGem || false,
-    },
-    { id: spotId }
-  )
-  .catch(err => console.error("Edit write error", err));
-
+  // Send email notification
   fetch("/api/notify", {
     method: "POST",
     headers: {
@@ -1337,19 +1335,29 @@ hidden_gem: data.hiddenGem || false,
     body: JSON.stringify({
       type: "edit",
       spotId,
+
       spot: data.name || editedSpot?.name || "",
       oldName: editedSpot?.name || "",
       newName: data.name || "",
+
       oldLocation: editedSpot?.loc || "",
       newLocation: data.loc || "",
+
       oldCategory: editedSpot?.cat || "",
       newCategory: data.cat || "",
+
+      oldOutlets: editedSpot?.outlets || "",
+      newOutlets: nextOutlets,
+
       url: data.url || "",
+
       halal: data.halal || false,
       muslimOwned: data.muslimOwned || false,
+      noPorkLard: data.noPorkLard || false,
       vegan: data.vegan || false,
       dairyFree: data.dairyFree || false,
-      multipleOutlets: data.multipleOutlets || false,
+      multipleOutlets: nextMultipleOutlets,
+      islandWide: data.outletType === "island",
       hiddenGem: data.hiddenGem || false,
     }),
   }).catch(err => {
