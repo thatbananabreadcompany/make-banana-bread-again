@@ -1415,14 +1415,40 @@ const submitEdit = useCallback((spotId, data) => {
     if(l.includes("island-wide")||l.includes("islandwide"))outlets="island-wide";
     else if(l.includes("multiple")||l.includes("outlets"))outlets="multiple";
     const tempId=`temp_${Date.now()}`;
-    const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
+const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{
+  halal:nHalal,
+  muslimOwned:nMuslim,
+  noPorkLard:nNoPorkLard,
+  vegan:nVegan,
+  dairyFree:nDairy,
+  hiddenGem:nHidden,
+});
     const newSpotData={...mapSpotToDb(tempSpot),outlets};
-    const notifyPayload={type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy};
+const notifyPayload={
+  type:"new_spot",
+  name:nName.trim(),
+  loc:nLoc.trim(),
+  cat:nCat,
+  outlets,
+  url:nUrl.trim(),
+  halal:nHalal,
+  muslimOwned:nMuslim,
+  noPorkLard:nNoPorkLard,
+  vegan:nVegan,
+  dairyFree:nDairy,
+  hiddenGem:nHidden,
+};
 
     setFormErr("");setDupWarn(null);
     setSpots(prev=>{const u=[...prev,tempSpot];setPair(randPair(u));return u;});
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
-    setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
+setNHalal(false);
+setNMuslim(false);
+setNNoPorkLard(false);
+setNVegan(false);
+setNDairy(false);
+setNHidden(false);
+setNSG(false);
     showToast("Added to the vote");setSection("vote");
 
     // Write to Supabase, then replace the temporary local item with the saved DB row
@@ -1445,7 +1471,7 @@ const submitEdit = useCallback((spotId, data) => {
     fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify(notifyPayload)
     }).catch(()=>{});
-  },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nVegan,nDairy,nSG,showToast]);
+},[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nNoPorkLard,nVegan,nDairy,nHidden,nSG,showToast]);
 
   const submitFeedback=useCallback(async()=>{
     if(!fbMsg.trim()){setFbErr("Please write your message.");return;}
@@ -1807,7 +1833,13 @@ const submitEdit = useCallback((spotId, data) => {
             <div style={{marginBottom:18}}>
               <label style={lbl}>Tags</label>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["Halal",nHalal,setNHalal],["Muslim-owned",nMuslim,setNMuslim],["Vegan",nVegan,setNVegan],["Dairy-free",nDairy,setNDairy]].map(([l,v,s])=>(
+                {[
+  ["Halal",nHalal,setNHalal],
+  ["Muslim-owned",nMuslim,setNMuslim],
+  ["No pork, no lard",nNoPorkLard,setNNoPorkLard],
+  ["Vegan",nVegan,setNVegan],
+  ["Dairy-free",nDairy,setNDairy],
+].map(([l,v,s])=>(
                   <Pill key={l} active={v} onClick={()=>s(prev=>!prev)}>{l}</Pill>
                 ))}
               </div>
