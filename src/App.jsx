@@ -232,20 +232,25 @@ hiddenGem: s.hidden_gem || false,
 
 function mapSpotToDb(s){
   return {
-    name:s.name,
-    loc:s.loc,
-    cat:s.cat,
-    outlets:s.outlets||'single',
-    url:s.url||'',
-    halal:!!s.halal,
-    muslim_owned:!!s.muslimOwned,
-    vegan:!!s.vegan,
-    dairy_free:!!s.dairyFree,
-    wins:Number(s.wins)||0,
-    losses:Number(s.losses)||0,
-    weekly_wins:Number(s.weeklyWins)||0,
-    stars_total:s.stars?.length ? s.stars.reduce((a,b)=>a+b,0) : 0,
-    star_count:s.stars?.length || 0,
+    name: s.name,
+    loc: s.loc,
+    cat: s.cat,
+    outlets: s.outlets || "single",
+    multiple_outlets: s.outlets === "multiple",
+    url: s.url || "",
+
+    halal: !!s.halal,
+    muslim_owned: !!s.muslimOwned,
+    no_pork_lard: !!s.noPorkLard,
+    vegan: !!s.vegan,
+    dairy_free: !!s.dairyFree,
+    hidden_gem: !!s.hiddenGem,
+
+    wins: Number(s.wins) || 0,
+    losses: Number(s.losses) || 0,
+    weekly_wins: Number(s.weeklyWins) || 0,
+    stars_total: s.stars?.length ? s.stars.reduce((a,b) => a + b, 0) : 0,
+    star_count: s.stars?.length || 0,
   };
 }
 
