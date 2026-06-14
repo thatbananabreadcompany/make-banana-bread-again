@@ -1415,14 +1415,25 @@ const submitEdit = useCallback((spotId, data) => {
     if(l.includes("island-wide")||l.includes("islandwide"))outlets="island-wide";
     else if(l.includes("multiple")||l.includes("outlets"))outlets="multiple";
     const tempId=`temp_${Date.now()}`;
-    const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
+    const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{
+  halal:nHalal,
+  muslimOwned:nMuslim,
+  noPorkLard:nNoPorkLard,
+  vegan:nVegan,
+  dairyFree:nDairy
+});
     const newSpotData={...mapSpotToDb(tempSpot),outlets};
     const notifyPayload={type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy};
 
     setFormErr("");setDupWarn(null);
     setSpots(prev=>{const u=[...prev,tempSpot];setPair(randPair(u));return u;});
     setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
-    setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
+setNHalal(false);
+setNMuslim(false);
+setNNoPorkLard(false);
+setNVegan(false);
+setNDairy(false);
+setNSG(false);
     showToast("Added to the vote");setSection("vote");
 
     // Write to Supabase, then replace the temporary local item with the saved DB row
