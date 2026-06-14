@@ -1120,6 +1120,7 @@ const [nNoPorkLard,setNNoPorkLard]=useState(false);
 const [nVegan,setNVegan]=useState(false);
 const [nDairy,setNDairy]=useState(false);
 const [nHidden,setNHidden]=useState(false);
+const [nSG,setNSG]=useState(false);
   const [formErr,setFormErr]=useState("");
   const [fbName,setFbName]=useState("");
   const [fbEmail,setFbEmail]=useState("");
