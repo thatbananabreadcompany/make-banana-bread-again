@@ -869,12 +869,13 @@ return "single";
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 22 }}>
         {[
-  ["Halal", eHalal, setEHalal],
-  ["Muslim-owned", eMuslim, setEMuslim],
-  ["No pork, no lard", eNoPorkLard, setENoPorkLard],
-  ["Vegan", eVegan, setEVegan],
-  ["Dairy-free", eDairy, setEDairy],
-  ["Hidden gems", eHidden, setEHidden],
+[
+  ["Halal",nHalal,setNHalal],
+  ["Muslim-owned",nMuslim,setNMuslim],
+  ["No pork, no lard",nNoPorkLard,setNNoPorkLard],
+  ["Vegan",nVegan,setNVegan],
+  ["Dairy-free",nDairy,setNDairy]
+]
 ].map(([label, active, setter]) => (
   <Pill key={label} active={active} onClick={() => setter(prev => !prev)}>
     {label}
