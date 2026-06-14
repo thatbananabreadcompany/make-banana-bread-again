@@ -1273,179 +1273,148 @@ const [nHidden,setNHidden]=useState(false);
     showToast("Review added");
   },[showToast]);
 
-const submitEdit = useCallback((spotId, data) => {
-  const editedSpot = spots.find(s => s.id === spotId);
+const submitSpot=useCallback(()=>{
+  if(!nName.trim()){
+    setFormErr("Name is required.");
+    return;
+  }
 
-  const nextOutlets =
-    data.outletType === "island"
-      ? "island-wide"
-      : data.outletType === "multiple"
-      ? "multiple"
-      : "single";
+  if(!nLoc.trim()){
+    setFormErr("Location is required.");
+    return;
+  }
 
-  const nextMultipleOutlets = data.outletType === "multiple";
+  if(!nSG){
+    setFormErr("Please confirm this business is in Singapore.");
+    return;
+  }
 
-  // Update the frontend immediately
-  setSpots(prev =>
-    prev.map(s =>
-      s.id === spotId
-        ? {
-            ...s,
-            name: data.name || s.name,
-            url: data.url || "",
-            loc: data.loc || "",
-            cat: data.cat || s.cat,
-            outlets: nextOutlets,
-            multipleOutlets: nextMultipleOutlets,
+  let outlets = nOut;
 
-            halal: data.halal || false,
-            muslimOwned: data.muslimOwned || false,
-            noPorkLard: data.noPorkLard || false,
-            vegan: data.vegan || false,
-            dairyFree: data.dairyFree || false,
-            hiddenGem: data.hiddenGem || false,
-          }
-        : s
-    )
+  const l = nLoc.toLowerCase();
+
+  if(l.includes("island-wide") || l.includes("islandwide")){
+    outlets = "island-wide";
+  } else if(l.includes("multiple") || l.includes("outlets")){
+    outlets = "multiple";
+  }
+
+  const tempId = `temp_${Date.now()}`;
+
+  const tempSpot = mkSpot(
+    tempId,
+    nName.trim(),
+    nLoc.trim(),
+    nCat,
+    outlets,
+    nUrl.trim(),
+    {
+      halal: nHalal,
+      muslimOwned: nMuslim,
+      noPorkLard: nNoPorkLard,
+      vegan: nVegan,
+      dairyFree: nDairy,
+      hiddenGem: nHidden,
+      multipleOutlets: outlets === "multiple",
+    }
   );
 
-  // Save to Supabase
+  const newSpotData = {
+    ...mapSpotToDb(tempSpot),
+    outlets,
+    multiple_outlets: outlets === "multiple",
+    no_pork_lard: nNoPorkLard,
+    hidden_gem: nHidden,
+  };
+
+  const notifyPayload = {
+    type: "new_spot",
+    name: nName.trim(),
+    loc: nLoc.trim(),
+    cat: nCat,
+    outlets,
+    url: nUrl.trim(),
+    halal: nHalal,
+    muslimOwned: nMuslim,
+    noPorkLard: nNoPorkLard,
+    vegan: nVegan,
+    dairyFree: nDairy,
+    hiddenGem: nHidden,
+    multipleOutlets: outlets === "multiple",
+    islandWide: outlets === "island-wide",
+  };
+
+  setFormErr("");
+  setDupWarn(null);
+
+  setSpots(prev=>{
+    const updated = [...prev, tempSpot];
+    setPair(randPair(updated));
+    return updated;
+  });
+
+  setNName("");
+  setNLoc("");
+  setNUrl("");
+  setNCat("Café");
+  setNOut("single");
+  setNHalal(false);
+  setNMuslim(false);
+  setNNoPorkLard(false);
+  setNVegan(false);
+  setNDairy(false);
+  setNHidden(false);
+  setNSG(false);
+
+  showToast("Added to the vote");
+  setSection("vote");
+
   getSupabase()
-    .update(
-      "spots",
-      {
-        name: data.name || "",
-        url: data.url || "",
-        loc: data.loc || "",
-        cat: data.cat || "",
-        outlets: nextOutlets,
-        multiple_outlets: nextMultipleOutlets,
+    .insert("spots", newSpotData)
+    .then(data=>{
+      const saved = Array.isArray(data) ? data[0] : data;
 
-        halal: data.halal || false,
-        muslim_owned: data.muslimOwned || false,
-        no_pork_lard: data.noPorkLard || false,
-        vegan: data.vegan || false,
-        dairy_free: data.dairyFree || false,
-        hidden_gem: data.hiddenGem || false,
-      },
-      { id: spotId }
-    )
-    .catch(err => console.error("Edit write error", err));
-
-  // Send email notification
-  fetch("/api/notify", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      type: "edit",
-      spotId,
-
-      spot: data.name || editedSpot?.name || "",
-      oldName: editedSpot?.name || "",
-      newName: data.name || "",
-
-      oldLocation: editedSpot?.loc || "",
-      newLocation: data.loc || "",
-
-      oldCategory: editedSpot?.cat || "",
-      newCategory: data.cat || "",
-
-      oldOutlets: editedSpot?.outlets || "",
-      newOutlets: nextOutlets,
-
-      url: data.url || "",
-
-      halal: data.halal || false,
-      muslimOwned: data.muslimOwned || false,
-      noPorkLard: data.noPorkLard || false,
-      vegan: data.vegan || false,
-      dairyFree: data.dairyFree || false,
-      multipleOutlets: nextMultipleOutlets,
-      islandWide: data.outletType === "island",
-      hiddenGem: data.hiddenGem || false,
-    }),
-  }).catch(err => {
-    console.error("Edit email error", err);
-  });
-
-  showToast("Thanks for the update. We’ll review it soon.");
-}, [showToast, spots]);
-
-  const flagListing = useCallback((spotId, reason, otherText) => {
-  setSpots(prev =>
-    prev.map(s =>
-      s.id === spotId ? { ...s, flagged: true } : s
-    )
-  );
-
-  showToast("Flagged. We will review it.");
-
-  const spot = spots.find(s => s.id === spotId);
-
-  fetch("/api/notify", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      type: "flag",
-      spotId,
-      spot: spot?.name || "",
-      location: spot?.loc || "",
-      category: spot?.cat || "",
-      url: spot?.url || "",
-      reason,
-      otherText: otherText || "",
-    }),
-  }).catch(err => {
-    console.error("Flag email/save error", err);
-  });
-}, [showToast, spots]);
-
-  const submitSpot=useCallback(()=>{
-    // Rate limiting handled server-side via Supabase RLS + IP check
-    // Client-side: basic session guard to prevent double-submit
-    if(!nName.trim()){setFormErr("Name is required.");return;}
-    if(!nLoc.trim()){setFormErr("Location is required.");return;}
-    if(!nSG){setFormErr("Please confirm this business is in Singapore.");return;}
-    let outlets=nOut;
-    const l=nLoc.toLowerCase();
-    if(l.includes("island-wide")||l.includes("islandwide"))outlets="island-wide";
-    else if(l.includes("multiple")||l.includes("outlets"))outlets="multiple";
-    const tempId=`temp_${Date.now()}`;
-    const tempSpot=mkSpot(tempId,nName.trim(),nLoc.trim(),nCat,outlets,nUrl.trim(),{halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy});
-    const newSpotData={...mapSpotToDb(tempSpot),outlets};
-    const notifyPayload={type:"new_spot",name:nName.trim(),loc:nLoc.trim(),cat:nCat,outlets,url:nUrl.trim(),halal:nHalal,muslimOwned:nMuslim,vegan:nVegan,dairyFree:nDairy};
-
-    setFormErr("");setDupWarn(null);
-    setSpots(prev=>{const u=[...prev,tempSpot];setPair(randPair(u));return u;});
-    setNName("");setNLoc("");setNUrl("");setNCat("Café");setNOut("single");
-    setNHalal(false);setNMuslim(false);setNVegan(false);setNDairy(false);setNSG(false);
-    showToast("Added to the vote");setSection("vote");
-
-    // Write to Supabase, then replace the temporary local item with the saved DB row
-    getSupabase().insert('spots',newSpotData).then(data=>{
-      const saved=Array.isArray(data)?data[0]:data;
       if(saved){
-        const mapped=mapSpotFromDb(saved);
+        const mapped = mapSpotFromDb(saved);
+
         setSpots(prev=>{
-          const u=prev.map(item=>item.id===tempId?mapped:item);
-          setPair(randPair(u));
-          return u;
+          const updated = prev.map(item =>
+            item.id === tempId ? mapped : item
+          );
+
+          setPair(randPair(updated));
+          return updated;
         });
       }
-    }).catch(err=>{
-      console.error('Add spot error:',err);
-      setDbError('Add spot saved locally but failed to sync: '+(err?.message||err));
+    })
+    .catch(err=>{
+      console.error("Add spot error:", err);
+      setDbError("Add spot saved locally but failed to sync: " + (err?.message || err));
     });
 
-    // Email notification
-    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(notifyPayload)
-    }).catch(()=>{});
-  },[nName,nLoc,nUrl,nCat,nOut,nHalal,nMuslim,nVegan,nDairy,nSG,showToast]);
+  fetch("/api/notify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(notifyPayload),
+  }).catch(()=>{});
+
+},[
+  nName,
+  nLoc,
+  nUrl,
+  nCat,
+  nOut,
+  nHalal,
+  nMuslim,
+  nNoPorkLard,
+  nVegan,
+  nDairy,
+  nHidden,
+  nSG,
+  showToast,
+]);
 
   const submitFeedback=useCallback(async()=>{
     if(!fbMsg.trim()){setFbErr("Please write your message.");return;}
