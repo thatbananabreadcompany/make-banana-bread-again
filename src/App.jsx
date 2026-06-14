@@ -1639,13 +1639,41 @@ setNSG(false);
               </div>
             ):(
               <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-                <div>
-                  <p style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8960C",marginBottom:4}}>Banana Bread of the Week</p>
-                  <p style={{fontSize:14,fontWeight:600,color:"#FFE135",marginBottom:2}}>Launching soon.</p>
-                  <p style={{fontSize:11,color:"rgba(255,225,53,0.5)"}}>Votes close Sat 11:59pm · Winner announced Sun 12pm SGT</p>
-                </div>
-                <span style={{fontSize:28,flexShrink:0}}>🏆</span>
-              </div>
+                <div style={{background:"#1A0800", borderRadius:16, padding:"16px 18px", marginBottom:24, display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+  <div>
+    <p style={{fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#C8960C", marginBottom:2}}>
+      Banana Bread of the Week
+    </p>
+   {(() => {
+  const score = (s) => s.votes ?? s.wins ?? s.voteCount ?? 0;
+
+  const winner = [...spots]
+    .filter((s) => score(s) > 0)
+    .sort((a, b) => score(b) - score(a))[0];
+
+  return winner ? (
+    <>
+      <p style={{fontSize:14, fontWeight:600, color:"#FFE135", marginBottom:2}}>
+        {winner.name}
+      </p>
+      <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
+        {score(winner)} votes · Banana Bread of the Week
+      </p>
+    </>
+  ) : (
+    <>
+      <p style={{fontSize:14, fontWeight:600, color:"#FFE135", marginBottom:2}}>
+        No winner yet.
+      </p>
+      <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
+        Vote now · Winner updates every Sunday 12pm SGT
+      </p>
+    </>
+  );
+})()}
+  </div>
+  <span style={{fontSize:28, flexShrink:0}}>🏆</span>
+</div>
             )}
 
 
