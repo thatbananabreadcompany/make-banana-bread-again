@@ -320,14 +320,25 @@ function Badge({label,bg,color}){return <span style={{fontSize:10,fontWeight:600
 function OutletBadge({outlets}){if(outlets==="single")return null;return <Badge label={outlets==="island-wide"?"Island-wide":"Multiple outlets"} bg="#EAF4FF" color={T.blue}/>;}
 function VerifiedBadge(){return <Badge label="Link provided" bg="#F0FDF4" color={T.green}/>;}
 function HiddenGemBadge(){return <Badge label="Hidden gem" bg="#FFF8E1" color={T.orange}/>;}
-function DietTags({spot}){
-  const items=[];
-  if(spot.halal)items.push(["Halal","#F0FDF4","#166534"]);
-  if(spot.muslimOwned)items.push(["Muslim-owned","#EFF6FF","#1D4ED8"]);
-  if(spot.vegan)items.push(["Vegan","#FAF5FF","#7E22CE"]);
-  if(spot.dairyFree)items.push(["Dairy-free","#FFFBEB","#92400E"]);
-  if(!items.length)return null;
-  return <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{items.map(([l,bg,c])=><Badge key={l} label={l} bg={bg} color={c}/>)}</div>;
+function DietTags({ spot }) {
+  const items = [];
+
+  if (spot.halal) items.push(["Halal", "#F0FDF4", "#15803D"]);
+  if (spot.muslimOwned) items.push(["Muslim-owned", "#F0FDF4", "#15803D"]);
+  if (spot.noPorkLard) items.push(["No pork, no lard", "#F0FDF4", "#15803D"]);
+  if (spot.vegan) items.push(["Vegan", "#FAF5FF", "#7E22CE"]);
+  if (spot.dairyFree) items.push(["Dairy-free", "#FFF7ED", "#C2410C"]);
+  if (spot.hiddenGem) items.push(["Hidden gems", "#FEFCE8", "#A16207"]);
+
+  if (!items.length) return null;
+
+  return (
+    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
+      {items.map(([label, bg, color]) => (
+        <Badge key={label} label={label} bg={bg} color={color} />
+      ))}
+    </div>
+  );
 }
 function Stars({value,size=12}){const n=Math.round(value);return <span style={{fontSize:size,color:"#FFB800",letterSpacing:"0.5px"}}>{"★".repeat(n)}{"☆".repeat(5-n)}</span>;}
 function Pill({active,onClick,children}){
