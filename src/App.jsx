@@ -214,11 +214,12 @@ function mapSpotFromDb(s){
     outlets: s.outlets || "",
     multipleOutlets: s.multiple_outlets || false,
     url:s.url||'',
-    halal: s.halal || false,
-    muslimOwned: s.muslim_owned || false,
-    vegan: s.vegan || false,
-    dairyFree: s.dairy_free || false,
-    hiddenGem: s.hidden_gem || false,
+halal: s.halal || false,
+muslimOwned: s.muslim_owned || false,
+noPorkLard: s.no_pork_lard || false,
+vegan: s.vegan || false,
+dairyFree: s.dairy_free || false,
+hiddenGem: s.hidden_gem || false,
     wins:Number(s.wins)||0,
     losses:Number(s.losses)||0,
     weeklyWins:Number(s.weekly_wins)||0,
@@ -745,6 +746,7 @@ return "single";
   const [eOutletType, setEOutletType] = useState(getInitialOutletType());
   const [eHalal, setEHalal] = useState(spot.halal || false);
   const [eMuslim, setEMuslim] = useState(spot.muslimOwned || false);
+  const [eNoPorkLard, setENoPorkLard] = useState(spot.noPorkLard || false);
   const [eVegan, setEVegan] = useState(spot.vegan || false);
   const [eDairy, setEDairy] = useState(spot.dairyFree || false);
   const [eHidden, setEHidden] = useState(spot.hiddenGem || false);
@@ -852,16 +854,17 @@ return "single";
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 22 }}>
         {[
-          ["Halal", eHalal, setEHalal],
-          ["Muslim-owned", eMuslim, setEMuslim],
-          ["Vegan", eVegan, setEVegan],
-          ["Dairy-free", eDairy, setEDairy],
-          ["Hidden gems", eHidden, setEHidden],
-        ].map(([label, active, setter]) => (
-          <Pill key={label} active={active} onClick={() => setter(prev => !prev)}>
-            {label}
-          </Pill>
-        ))}
+  ["Halal", eHalal, setEHalal],
+  ["Muslim-owned", eMuslim, setEMuslim],
+  ["No pork, no lard", eNoPorkLard, setENoPorkLard],
+  ["Vegan", eVegan, setEVegan],
+  ["Dairy-free", eDairy, setEDairy],
+  ["Hidden gems", eHidden, setEHidden],
+].map(([label, active, setter]) => (
+  <Pill key={label} active={active} onClick={() => setter(prev => !prev)}>
+    {label}
+  </Pill>
+))}
       </div>
 
       <button
@@ -874,6 +877,7 @@ return "single";
   outletType: eOutletType,
   halal: eHalal,
   muslimOwned: eMuslim,
+  noPorkLard: eNoPorkLard,
   vegan: eVegan,
   dairyFree: eDairy,
   hiddenGem: eHidden,
@@ -1274,11 +1278,12 @@ export default function MBBA(){
 
 multipleOutlets: data.outletType === "multiple",
           
-          halal: data.halal || false,
-          muslimOwned: data.muslimOwned || false,
-          vegan: data.vegan || false,
-          dairyFree: data.dairyFree || false,
-          hiddenGem: data.hiddenGem || false,
+       halal: data.halal || false,
+muslimOwned: data.muslimOwned || false,
+noPorkLard: data.noPorkLard || false,
+vegan: data.vegan || false,
+dairyFree: data.dairyFree || false,
+hiddenGem: data.hiddenGem || false,
         }
       : s
   )
@@ -1302,11 +1307,12 @@ multipleOutlets: data.outletType === "multiple",
 
 multipleOutlets: data.outletType === "multiple",
 
-      halal: data.halal || false,
-      muslim_owned: data.muslimOwned || false,
-      vegan: data.vegan || false,
-      dairy_free: data.dairyFree || false,
-      hidden_gem: data.hiddenGem || false,
+   halal: data.halal || false,
+muslim_owned: data.muslimOwned || false,
+no_pork_lard: data.noPorkLard || false,
+vegan: data.vegan || false,
+dairy_free: data.dairyFree || false,
+hidden_gem: data.hiddenGem || false,
     },
     { id: spotId }
   )
