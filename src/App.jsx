@@ -63,7 +63,7 @@ function strSimilarity(a, b) {
 
 const mkSpot=(id,name,loc,cat,outlets,url="",opts={})=>({
   id,name,loc,cat,outlets,url,
-  halal:false,muslimOwned:false,vegan:false,dairyFree:false,
+halal:false,muslimOwned:false,noPorkLard:false,vegan:false,dairyFree:false,
   wins:0,losses:0,stars:[],tags:{},
   addedAt:Date.now()-Math.floor(Math.random()*30)*86400000,
   weeklyWins:0,
@@ -325,22 +325,21 @@ function Badge({label,bg,color}){return <span style={{fontSize:10,fontWeight:600
 function OutletBadge({outlets}){if(outlets==="single")return null;return <Badge label={outlets==="island-wide"?"Island-wide":"Multiple outlets"} bg="#EAF4FF" color={T.blue}/>;}
 function VerifiedBadge(){return <Badge label="Link provided" bg="#F0FDF4" color={T.green}/>;}
 function HiddenGemBadge(){return <Badge label="Hidden gem" bg="#FFF8E1" color={T.orange}/>;}
-function DietTags({ spot }) {
-  const items = [];
+function DietTags({spot}){
+  const items=[];
 
-  if (spot.halal) items.push(["Halal", "#F0FDF4", "#15803D"]);
-  if (spot.muslimOwned) items.push(["Muslim-owned", "#F0FDF4", "#15803D"]);
-  if (spot.noPorkLard) items.push(["No pork, no lard", "#F0FDF4", "#15803D"]);
-  if (spot.vegan) items.push(["Vegan", "#FAF5FF", "#7E22CE"]);
-  if (spot.dairyFree) items.push(["Dairy-free", "#FFF7ED", "#C2410C"]);
-  if (spot.hiddenGem) items.push(["Hidden gems", "#FEFCE8", "#A16207"]);
+  if(spot.halal) items.push(["Halal","#F0FDF4","#15803D"]);
+  if(spot.muslimOwned) items.push(["Muslim-owned","#F0FDF4","#15803D"]);
+  if(spot.noPorkLard) items.push(["No pork, no lard","#F0FDF4","#15803D"]);
+  if(spot.vegan) items.push(["Vegan","#FAF5FF","#7E22CE"]);
+  if(spot.dairyFree) items.push(["Dairy-free","#FFF7ED","#C2410C"]);
 
-  if (!items.length) return null;
+  if(!items.length) return null;
 
   return (
-    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
-      {items.map(([label, bg, color]) => (
-        <Badge key={label} label={label} bg={bg} color={color} />
+    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
+      {items.map(([label,bg,color])=>(
+        <Badge key={label} label={label} bg={bg} color={color}/>
       ))}
     </div>
   );
@@ -1116,10 +1115,11 @@ export default function MBBA(){
   const [nCat,setNCat]=useState("Café");
   const [nOut,setNOut]=useState("single");
   const [nHalal,setNHalal]=useState(false);
-  const [nMuslim,setNMuslim]=useState(false);
-  const [nVegan,setNVegan]=useState(false);
-  const [nDairy,setNDairy]=useState(false);
-  const [nSG,setNSG]=useState(false);
+const [nMuslim,setNMuslim]=useState(false);
+const [nNoPorkLard,setNNoPorkLard]=useState(false);
+const [nVegan,setNVegan]=useState(false);
+const [nDairy,setNDairy]=useState(false);
+const [nHidden,setNHidden]=useState(false);
   const [formErr,setFormErr]=useState("");
   const [fbName,setFbName]=useState("");
   const [fbEmail,setFbEmail]=useState("");
