@@ -1494,14 +1494,19 @@ setNSG(false);
     setFbSending(false);
   },[fbName,fbEmail,fbType,fbMsg]);
 
-  const ranked=useMemo(()=>[...spots].sort((a,b)=>{
-    const aVotes=a.wins+a.losses, bVotes=b.wins+b.losses;
-    // Unvoted spots go to bottom
-    if(aVotes===0&&bVotes===0) return a.name.localeCompare(b.name);
-    if(aVotes===0) return 1;
-    if(bVotes===0) return -1;
-    return calcElo(b.wins,b.losses)-calcElo(a.wins,a.losses);
-  }),[spots]);
+const ranked = useMemo(() => [...spots].sort((a, b) => {
+  const aVotes = a.wins + a.losses;
+  const bVotes = b.wins + b.losses;
+
+  if (aVotes === 0 && bVotes === 0) return a.name.localeCompare(b.name);
+  if (aVotes === 0) return 1;
+  if (bVotes === 0) return -1;
+
+  const rankDiff = calcElo(b.wins, b.losses) - calcElo(a.wins, a.losses);
+  if (rankDiff !== 0) return rankDiff;
+
+  return b.wins - a.wins;
+}), [spots]);
 
 
   const filterFn=useCallback((list)=>list.filter(s=>{
