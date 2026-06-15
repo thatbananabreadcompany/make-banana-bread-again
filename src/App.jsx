@@ -1645,16 +1645,16 @@ setNSG(false);
       Banana Bread of the Week
     </p>
    {(() => {
-const score = (s) => Math.max(
-  Number(s.weekly_wins || 0),
-  Number(s.weeklyWins || 0),
-  Number(s.wins || 0),
-  Number(s.votes || 0),
-  Number(s.voteCount || 0)
+  const score = (s) => Math.max(
+    Number(s.weekly_wins || 0),
+    Number(s.weeklyWins || 0),
+    Number(s.wins || 0),
+    Number(s.votes || 0),
+    Number(s.voteCount || 0)
+  );
 
-  const winner = [...spots]
-    .filter((s) => score(s) > 0)
-    .sort((a, b) => score(b) - score(a))[0];
+  const sorted = [...spots].sort((a, b) => score(b) - score(a));
+  const winner = sorted[0];
 
   return winner ? (
     <>
@@ -1662,16 +1662,16 @@ const score = (s) => Math.max(
         {winner.name}
       </p>
       <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
-        {score(winner)} votes · Banana Bread of the Week
+        Score: {score(winner)} · wins: {winner.wins || 0} · weekly: {winner.weekly_wins || winner.weeklyWins || 0}
       </p>
     </>
   ) : (
     <>
       <p style={{fontSize:14, fontWeight:600, color:"#FFE135", marginBottom:2}}>
-        No winner yet.
+        No spots loaded.
       </p>
       <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
-        Vote now · Winner updates every Sunday 12pm SGT
+        Check Supabase load
       </p>
     </>
   );
