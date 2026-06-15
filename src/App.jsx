@@ -1645,7 +1645,12 @@ setNSG(false);
       Banana Bread of the Week
     </p>
    {(() => {
-const score = (s) => s.weekly_wins ?? s.weeklyWins ?? s.wins ?? s.votes ?? s.voteCount ?? 0;
+const score = (s) => Math.max(
+  Number(s.weekly_wins || 0),
+  Number(s.weeklyWins || 0),
+  Number(s.wins || 0),
+  Number(s.votes || 0),
+  Number(s.voteCount || 0)
 
   const winner = [...spots]
     .filter((s) => score(s) > 0)
