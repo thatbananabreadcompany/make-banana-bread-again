@@ -1655,6 +1655,7 @@ const liveWinner = sorted[0];
 
 const displayScore = liveWinner ? liveWinner.wins : 0;
 
+
   return (
     <div style={{
       background:"#1A0800",
