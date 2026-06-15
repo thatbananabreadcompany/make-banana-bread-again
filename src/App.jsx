@@ -1617,34 +1617,8 @@ setNSG(false);
               <p style={{fontSize:14,color:T.muted}}>{spots.length} spots</p>
             </div>
 
-            {/* BOTW banner — live winner or teaser */}
-            {weeklyWinner?(
-              <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,border:"1.5px solid #C8960C"}}>
-                <p style={{fontSize:10,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8960C",marginBottom:6}}>🏆 Banana Bread of the Week</p>
-                <p style={{fontSize:18,fontWeight:700,color:"#FFE135",marginBottom:2}}>{weeklyWinner.spots?.name||"This week's winner"}</p>
-                <p style={{fontSize:12,color:"rgba(255,225,53,0.6)",marginBottom:10}}>📍 {weeklyWinner.spots?.loc}</p>
-                {weeklyWinner.discount_code&&(
-                  <div style={{background:"rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
-                    <div>
-                      <p style={{fontSize:12,color:"rgba(255,225,53,0.7)",marginBottom:2}}>{weeklyWinner.discount_desc}</p>
-                      <p style={{fontFamily:"'Courier New',monospace",fontSize:16,fontWeight:700,color:"#FFE135",letterSpacing:"0.1em"}}>{weeklyWinner.discount_code}</p>
-                    </div>
-                    <button onClick={()=>{try{navigator.clipboard.writeText(weeklyWinner.discount_code);}catch{}showToast("Code copied!");}}
-                      style={{background:"#FFE135",border:"none",borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:T.font,color:"#1A0800",flexShrink:0}}>
-                      Copy
-                    </button>
-                  </div>
-                )}
-                <p style={{fontSize:10,color:"rgba(255,225,53,0.3)",marginTop:8}}>Votes close Sat 11:59pm · Winner announced Sun 12pm SGT</p>
-              </div>
-            ):(
-              <div style={{background:"#1A0800",borderRadius:16,padding:"16px 18px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-                <div style={{background:"#1A0800", borderRadius:16, padding:"16px 18px", marginBottom:24, display:"flex", alignItems:"center", justifyContent:"space-between"}}>
-  <div>
-    <p style={{fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#C8960C", marginBottom:2}}>
-      Banana Bread of the Week
-    </p>
-   {(() => {
+            {/* BOTW banner — live winner or top weekly score */}
+{(() => {
   const score = (s) => Math.max(
     Number(s.weekly_wins || 0),
     Number(s.weeklyWins || 0),
@@ -1654,35 +1628,66 @@ setNSG(false);
   );
 
   const sorted = [...spots].sort((a, b) => score(b) - score(a));
-  const winner = sorted[0];
+  const liveWinner = sorted[0];
 
-  return winner ? (
-    <>
-      <p style={{fontSize:14, fontWeight:600, color:"#FFE135", marginBottom:2}}>
-        {winner.name}
-      </p>
-      <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
-        Score: {score(winner)} · wins: {winner.wins || 0} · weekly: {winner.weekly_wins || winner.weeklyWins || 0}
-      </p>
-    </>
-  ) : (
-    <>
-      <p style={{fontSize:14, fontWeight:600, color:"#FFE135", marginBottom:2}}>
-        No spots loaded.
-      </p>
-      <p style={{fontSize:11, color:"rgba(255,225,53,0.5)"}}>
-        Check Supabase load
-      </p>
-    </>
+  const displayName =
+    weeklyWinner?.spots?.name ||
+    liveWinner?.name ||
+    "No winner yet.";
+
+  const displayLoc =
+    weeklyWinner?.spots?.loc ||
+    liveWinner?.loc ||
+    "";
+
+  const displayScore = liveWinner ? score(liveWinner) : 0;
+
+  return (
+    <div style={{
+      background:"#1A0800",
+      borderRadius:16,
+      padding:"16px 18px",
+      marginBottom:24,
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"space-between",
+      gap:12
+    }}>
+      <div>
+        <p style={{
+          fontSize:10,
+          fontWeight:700,
+          letterSpacing:"0.12em",
+          textTransform:"uppercase",
+          color:"#C8960C",
+          marginBottom:2
+        }}>
+          Banana Bread of the Week
+        </p>
+
+        <p style={{
+          fontSize:14,
+          fontWeight:600,
+          color:"#FFE135",
+          marginBottom:2
+        }}>
+          {displayName}
+        </p>
+
+        <p style={{
+          fontSize:11,
+          color:"rgba(255,225,53,0.5)"
+        }}>
+          {displayScore > 0
+            ? `${displayScore} votes · ${displayLoc ? `📍 ${displayLoc}` : "Winner announced"}`
+            : "Vote now · Winner updates every Sunday 12pm SGT"}
+        </p>
+      </div>
+
+      <span style={{fontSize:28, flexShrink:0}}>🏆</span>
+    </div>
   );
 })()}
-  </div>
-  <span style={{fontSize:28, flexShrink:0}}>🏆</span>
-</div>
-            )}
-
-
-
             {/* Cards */}
             <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
               {pair.map((spot,idx)=>{
