@@ -1627,8 +1627,21 @@ setNSG(false);
     Number(s.voteCount || 0)
   );
 
-  const sorted = [...spots].sort((a, b) => score(b) - score(a));
-  const liveWinner = sorted[0];
+ const sorted = [...spots].sort((a, b) => {
+  const aVotes = a.wins + a.losses;
+  const bVotes = b.wins + b.losses;
+
+  if (aVotes === 0 && bVotes === 0) return a.name.localeCompare(b.name);
+  if (aVotes === 0) return 1;
+  if (bVotes === 0) return -1;
+
+  const rankDiff = calcElo(b.wins, b.losses) - calcElo(a.wins, a.losses);
+  if (rankDiff !== 0) return rankDiff;
+
+  return b.wins - a.wins;
+});
+
+const liveWinner = sorted[0];
 
   const displayName =
     weeklyWinner?.spots?.name ||
