@@ -1653,7 +1653,7 @@ const liveWinner = sorted[0];
     liveWinner?.loc ||
     "";
 
-  const displayScore = liveWinner ? score(liveWinner) : 0;
+const displayScore = liveWinner ? liveWinner.wins : 0;
 
   return (
     <div style={{
