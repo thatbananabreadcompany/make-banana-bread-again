@@ -1,4 +1,4 @@
-export const CATS = ["Café","Restaurant","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Hotel"];
+export const CATS = ["Café","Restaurant","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Korean","Hotel"];
 
 export const DESCRIPTORS = {
   Texture: ["Moist","Dense","Light","Cakey","Crusty top","Gooey"],

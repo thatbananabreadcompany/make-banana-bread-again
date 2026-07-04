@@ -1323,7 +1323,7 @@ const ranked = useMemo(() => [...spots].sort((a, b) => {
         html,body,#root{background:var(--crumb);font-family:var(--font-body);color:var(--crust);-webkit-font-smoothing:antialiased;min-height:100%;}
         body{overscroll-behavior-y:contain;margin:0;padding:0;}
         #root{display:flex;flex-direction:column;min-height:100vh;}
-        button,input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none;}
+        button,input,textarea,select{font-family:inherit;color:inherit;-webkit-appearance:none;appearance:none;}
         input,textarea,select{font-size:16px !important;}
         button{touch-action:manipulation;}
         button:active{opacity:0.85;}

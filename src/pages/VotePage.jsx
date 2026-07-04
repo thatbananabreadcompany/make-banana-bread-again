@@ -83,29 +83,36 @@ export default function VotePage({ spots, ranked, weeklyWinner, pair, chosen, vo
             <h1 className="mbba-headline" style={{ textAlign: "center" }}>Which loaf <em>takes it?</em></h1>
             <p className="mbba-sub" style={{ textAlign: "center", marginBottom: 22 }}>Tap your winner. The city is watching.</p>
 
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[spotA, spotB].map((spot, idx) => (
-                <button
-                  key={spot.id}
-                  className="mbba-card pressable"
-                  disabled={!!chosen}
-                  onClick={() => handlePick(idx)}
-                  style={{ position: "relative", width: "100%", textAlign: "left", background: "#fff", padding: "20px 20px 18px" }}
-                >
-                  <span style={{ position: "absolute", top: 16, right: 16, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-soft)" }}>Tap to vote</span>
-                  <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", fontWeight: 700, color: "var(--ink-soft)" }}>{spot.cat} · {locText(spot)}</div>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,7.4vw,36px)", textTransform: "uppercase", lineHeight: 1.02, margin: "4px 0 10px" }}>{spot.name}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    <span className="mbba-chip on">{spot.wins}W–{spot.losses}L</span>
-                    <span className="mbba-chip">{flavorTag(spot)}</span>
-                  </div>
-                </button>
+                <div key={spot.id}>
+                  <button
+                    className="mbba-card pressable"
+                    disabled={!!chosen}
+                    onClick={() => handlePick(idx)}
+                    style={{ width: "100%", textAlign: "left", background: "#fff", padding: "20px 20px 18px" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                      <span style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", fontWeight: 700, color: "var(--ink-soft)" }}>{spot.cat} · {locText(spot)}</span>
+                      <span style={{ flex: "0 0 auto", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-soft)", whiteSpace: "nowrap" }}>Tap to vote</span>
+                    </div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,7.4vw,36px)", textTransform: "uppercase", lineHeight: 1.02, margin: "4px 0 10px" }}>{spot.name}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      <span className="mbba-chip on">{spot.wins}W–{spot.losses}L</span>
+                      <span className="mbba-chip">{flavorTag(spot)}</span>
+                    </div>
+                  </button>
+                  {idx === 0 && (
+                    <div style={{ position: "relative", height: 0 }}>
+                      <div style={{
+                        position: "absolute", left: "50%", top: 0, transform: "translate(-50%,-50%) rotate(-6deg)",
+                        zIndex: 3, background: "var(--crust)", color: "var(--yellow)", fontFamily: "var(--font-display)",
+                        fontSize: 20, padding: "8px 16px", borderRadius: 12, boxShadow: "3px 3px 0 rgba(35,21,5,.25)", pointerEvents: "none",
+                      }}>VS</div>
+                    </div>
+                  )}
+                </div>
               ))}
-              <div style={{
-                position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%) rotate(-6deg)",
-                zIndex: 3, background: "var(--crust)", color: "var(--yellow)", fontFamily: "var(--font-display)",
-                fontSize: 20, padding: "8px 16px", borderRadius: 12, boxShadow: "3px 3px 0 rgba(35,21,5,.25)", pointerEvents: "none",
-              }}>VS</div>
             </div>
 
             <button className="mbba-link-quiet" onClick={handleSkip}>Can't call it? Skip this one</button>

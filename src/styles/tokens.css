@@ -303,6 +303,14 @@
 .mbba-empty h3{ font-family: var(--font-display); font-size: 22px; text-transform: uppercase; margin-bottom: 6px; }
 .mbba-empty p{ font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
 
+/* ── keyboard focus ── */
+.mbba button:focus-visible,
+.mbba input:focus-visible,
+.mbba textarea:focus-visible{
+  outline: 3px dashed var(--crust);
+  outline-offset: 2px;
+}
+
 /* ── pop / fade animations ── */
 @keyframes mbba-pop{ from{ transform: scale(.94); opacity: 0; } to{ transform: scale(1); opacity: 1; } }
 .mbba-pop-in{ animation: mbba-pop .35s cubic-bezier(.2,1.4,.4,1); }

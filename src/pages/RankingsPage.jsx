@@ -86,8 +86,8 @@ export default function RankingsPage({ spots, ranked, weeklyWinner }) {
         {champBase && (
           <div style={{ background: "var(--crust)", color: "var(--crumb)", borderRadius: 22, padding: "18px 20px", boxShadow: "4px 4px 0 rgba(35,21,5,.22)", marginBottom: 14, position: "relative", overflow: "hidden" }}>
             <span style={{ position: "absolute", right: -6, top: -10, fontSize: 64, transform: "rotate(12deg)", opacity: .9 }}>🏆</span>
-            <div style={{ fontSize: 10, letterSpacing: ".24em", textTransform: "uppercase", fontWeight: 700, color: "var(--yellow)" }}>Reigning champ</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,8vw,38px)", textTransform: "uppercase", lineHeight: 1, margin: "6px 0 8px" }}>{champBase.name}</div>
+            <div style={{ fontSize: 10, letterSpacing: ".24em", textTransform: "uppercase", fontWeight: 700, color: "var(--yellow)", paddingRight: 60 }}>Reigning champ</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,8vw,38px)", textTransform: "uppercase", lineHeight: 1, margin: "6px 0 8px", paddingRight: 60 }}>{champBase.name}</div>
             <div style={{ fontSize: 12.5, color: "rgba(255,249,235,.72)" }}>
               {champBase.cat} · {locText(champBase)} · leading the board {champBase.wins}W–{champBase.losses}L.
             </div>
