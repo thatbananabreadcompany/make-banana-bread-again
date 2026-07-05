@@ -1,4 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { CATS, DESCRIPTORS, ABOUT_TEXT, DISCLAIMER, CONTACT, FAQS, FLAG_REASONS } from "./constants.js";
+import Ticker from "./components/Ticker.jsx";
+import BottomNav from "./components/BottomNav.jsx";
+import AboutSheet from "./components/AboutSheet.jsx";
+import FeedbackSheet from "./components/FeedbackSheet.jsx";
+import VotePage from "./pages/VotePage.jsx";
+import RankingsPage from "./pages/RankingsPage.jsx";
+import SpotsPage from "./pages/SpotsPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 const T = {
   white:  "#FFFFFF",
@@ -13,41 +22,6 @@ const T = {
   orange: "#FF9500",
   font:   "-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif",
 };
-
-const CATS = ["Café","Restaurant","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Hotel"];
-
-const DESCRIPTORS = {
-  Texture: ["Moist","Dense","Light","Cakey","Crusty top","Gooey"],
-  Flavour: ["Fragrant","Strong banana","Subtle","Well balanced","Too sweet","Artificial taste","Real banana"],
-  Value:   ["Worth it","Hidden gem","Overpriced"],
-  Vibe:    ["Best warm","Good for gifts","Worth the queue","Good takeaway","Best with coffee","Good for sharing"],
-};
-
-const ABOUT_TEXT = [
-  "Most people have no idea how big Singapore's banana bread scene really is. It all started with a Reddit thread.",
-  "Heritage bakeries that have been doing it for generations. Japanese confectioneries with their own take. Home bakers taking orders through Instagram DMs. Cafés experimenting with flavours and techniques you won't find anywhere else.",
-  "It's all out there. The problem is, most of it never gets discovered.",
-  "We're building a community-powered guide to Singapore's best banana bread. No critics. No paid rankings. No secret judging panels. Just banana bread lovers having their say.",
-  "Every bakery, café, home baker, and brand gets the same shot. A home baker in Tampines gets the same chance as a chain with forty outlets. The votes decide. We're just here to help people discover great banana bread.",
-  "MBBA is an initiative by the team behind That Banana Bread Company. We love banana bread in all its forms, and yes, TBBC is on the list too. Same rules. Same votes. Same fate as everyone else.",
-  "Vote for your favourites. Discover something new. Add a spot we've missed. Tell your friends.",
-  "Let's make banana… bread again.",
-];
-
-const DISCLAIMER = "All rankings and ratings on this website are based on community submissions and opinions. They are provided for informational and entertainment purposes only and do not represent professional reviews, endorsements, or any measure of business performance.";
-
-const CONTACT = "thatbananabreadcompany@gmail.com";
-
-const FAQS = [
-  { q:"What is Make Banana Bread Again?", a:"A community game and directory celebrating Singapore's banana bread scene. It started with a Reddit thread on r/SingaporeEats. The community kept adding more. MBBA is what happened next.", link:{label:"See the original Reddit thread",url:"https://www.reddit.com/r/SingaporeEats/s/tObi79RyAt"}},
-  { q:"Are these rankings official?", a:"No. Rankings reflect community votes only. They are for discovery and entertainment. Nothing here is a professional review, a competition, or a commercial endorsement of any business.", link:null},
-  { q:"What is Banana Bread of the Week?", a:"Every week, votes are tallied and the community crowns a winner. The winner is announced every Sunday at noon SGT. The featured spot gets a banner on MBBA and a shareable winner badge. We reach out to the winner about discount codes or special offers for the community. Votes close every Saturday at 11:59pm SGT.", link:null},
-  { q:"How do I get my business listed?", a:`Anyone can add a spot using the Add section. Submissions go live immediately. To update or remove your listing contact us at ${CONTACT}`, link:null},
-  { q:"Is my data collected?", a:"No personal data is collected. All votes are anonymous. No account needed.", link:null},
-  { q:"Who built this?", a:`MBBA is an initiative by the team behind That Banana Bread Company. We love banana bread in all its forms, and we built this to help people discover great banana bread across Singapore. As of now, MBBA is an MVP and a work in progress. You'll probably find a few rough edges, and we're constantly improving the rankings, features, and directory as the community grows. If you've got feedback, we'd love to hear it at ${CONTACT}`, link:{label:"Visit That Banana Bread Company",url:"https://thatbananabreadcompany.com"}},
-  { q:"Can I get my listing removed?", a:`Yes. Email ${CONTACT} and we will act on it promptly.`, link:null},
-];
-
 
 function strSimilarity(a, b) {
   const x=a.toLowerCase().replace(/[^a-z0-9]/g,"");
@@ -292,7 +266,6 @@ function randPair(arr){
   _lastPairIds=[arr[a].id,arr[b].id];
   return[arr[a],arr[b]];
 }
-function calcAvg(arr){if(!arr.length)return null;return(arr.reduce((s,v)=>s+v,0)/arr.length).toFixed(1);}
 function getLoc(loc,outlets){
   if(outlets==="island-wide")return null;
   if(outlets==="multiple"&&(loc.toLowerCase().includes("multiple")||loc.toLowerCase().includes("outlets")))return null;
@@ -321,30 +294,6 @@ function useOGMeta(){
 }
 
 // ── ATOMS ─────────────────────────────────────────────────────────────────
-function Badge({label,bg,color}){return <span style={{fontSize:10,fontWeight:600,background:bg,color,borderRadius:6,padding:"2px 8px",whiteSpace:"nowrap"}}>{label}</span>;}
-function OutletBadge({outlets}){if(outlets==="single")return null;return <Badge label={outlets==="island-wide"?"Island-wide":"Multiple outlets"} bg="#EAF4FF" color={T.blue}/>;}
-function VerifiedBadge(){return <Badge label="Link provided" bg="#F0FDF4" color={T.green}/>;}
-function HiddenGemBadge(){return <Badge label="Hidden gem" bg="#FFF8E1" color={T.orange}/>;}
-function DietTags({spot}){
-  const items=[];
-
-  if(spot.halal) items.push(["Halal","#F0FDF4","#15803D"]);
-  if(spot.muslimOwned) items.push(["Muslim-owned","#F0FDF4","#15803D"]);
-  if(spot.noPorkLard) items.push(["No pork, no lard","#F0FDF4","#15803D"]);
-  if(spot.vegan) items.push(["Vegan","#FAF5FF","#7E22CE"]);
-  if(spot.dairyFree) items.push(["Dairy-free","#FFF7ED","#C2410C"]);
-
-  if(!items.length) return null;
-
-  return (
-    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
-      {items.map(([label,bg,color])=>(
-        <Badge key={label} label={label} bg={bg} color={color}/>
-      ))}
-    </div>
-  );
-}
-function Stars({value,size=12}){const n=Math.round(value);return <span style={{fontSize:size,color:"#FFB800",letterSpacing:"0.5px"}}>{"★".repeat(n)}{"☆".repeat(5-n)}</span>;}
 function Pill({active,onClick,children}){
   return <button onClick={onClick} style={{padding:"6px 14px",borderRadius:20,border:`1.5px solid ${active?T.black:T.border}`,background:active?T.yellow:T.white,color:T.black,fontSize:13,fontWeight:active?600:400,cursor:"pointer",fontFamily:T.font,transition:"all 0.12s",whiteSpace:"nowrap",flexShrink:0}}>{children}</button>;
 }
@@ -919,7 +868,6 @@ return "single";
 }
 
 // ── FLAG SHEET ────────────────────────────────────────────────────────────
-const FLAG_REASONS=["Permanently closed","Wrong information (name, location, category)","Incorrect dietary tags","Banana bread no longer on their menu","Duplicate listing","Other"];
 function FlagSheet({spot,onClose,onFlag}){
   const [selected,setSelected]=useState("");
   const [otherText,setOtherText]=useState("");
@@ -949,165 +897,32 @@ function FlagSheet({spot,onClose,onFlag}){
   );
 }
 
-// ── ABOUT SHEET ───────────────────────────────────────────────────────────
-function AboutSheet({onClose}){
-  const [openIdx,setOpenIdx]=useState(null);
-  return(
-    <Sheet onClose={onClose} title="About MBBA">
-      {/* About body */}
-      <div style={{marginBottom:28}}>
-        {ABOUT_TEXT.map((para,i)=>(
-          <p key={i} style={{fontSize:14,lineHeight:1.75,color:i===ABOUT_TEXT.length-1?T.black:"#3A3A3A",fontWeight:i===ABOUT_TEXT.length-1?600:400,marginBottom:i===ABOUT_TEXT.length-1?0:12,fontStyle:i===ABOUT_TEXT.length-1?"italic":"normal"}}>{para}</p>
-        ))}
-      </div>
-      {/* FAQ */}
-      <div style={{borderTop:`1px solid ${T.border}`,paddingTop:18}}>
-        <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,marginBottom:14}}>FAQ</p>
-        {FAQS.map((faq,i)=>(
-          <div key={i} style={{borderTop:`1px solid ${T.border}`,padding:"13px 0"}}>
-            <button onClick={()=>setOpenIdx(openIdx===i?null:i)} style={{width:"100%",background:"none",border:"none",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",fontFamily:T.font,gap:12}}>
-              <span style={{fontSize:14,fontWeight:600,textAlign:"left",color:T.black}}>{faq.q}</span>
-              <span style={{fontSize:18,color:T.muted,flexShrink:0,transition:"transform 0.2s",transform:openIdx===i?"rotate(45deg)":"none",lineHeight:1}}>+</span>
-            </button>
-            {openIdx===i&&(
-              <div style={{marginTop:10,paddingRight:20}}>
-                <p style={{fontSize:13,color:"#3A3A3A",lineHeight:1.7,marginBottom:faq.link?8:0}}>{faq.a}</p>
-                {faq.link&&<a href={faq.link.url} target="_blank" rel="noopener noreferrer" style={{fontSize:13,color:T.blue,fontWeight:500,textDecoration:"none"}}>{faq.link.label} →</a>}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      {/* Disclaimer */}
-      <div style={{marginTop:20,borderTop:`1px solid ${T.border}`,paddingTop:16}}>
-        <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,marginBottom:8}}>Disclaimer</p>
-        <p style={{fontSize:12,color:T.muted,lineHeight:1.65}}>{DISCLAIMER}</p>
-      </div>
-      <button onClick={onClose} style={{marginTop:16,width:"100%",padding:"14px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font}}>Done</button>
-    </Sheet>
-  );
-}
-
-// ── FILTERS ───────────────────────────────────────────────────────────────
-function Filters({fCat,setFCat,fHalal,setFHalal,fMuslim,setFMuslim,fVegan,setFVegan,fDairy,setFDairy,fOutlets,setFOutlets,fHidden,setFHidden,search,setSearch}){
-  return(
-    <>
-      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or area..."
-        style={{width:"100%",padding:"11px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:T.font,color:T.black,background:T.white,outline:"none",marginBottom:12}}/>
-      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,marginBottom:8,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-        {["All",...CATS].map(c=><Pill key={c} active={fCat===c} onClick={()=>setFCat(c)}>{c}</Pill>)}
-      </div>
-      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,marginBottom:24,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-        {[["Halal",fHalal,setFHalal],["Muslim-owned",fMuslim,setFMuslim],["Vegan",fVegan,setFVegan],["Dairy-free",fDairy,setFDairy],["Multiple outlets",fOutlets,setFOutlets],["Hidden gems",fHidden,setFHidden]].map(([l,v,s])=>(
-          <Pill key={l} active={v} onClick={()=>s(prev=>!prev)}>{l}</Pill>
-        ))}
-      </div>
-    </>
-  );
-}
-
-// ── ALPHA LIST ────────────────────────────────────────────────────────────
-function AlphaList({spots,onEdit,onFlag}){
-  if(!spots.length)return <p style={{textAlign:"center",color:T.muted,padding:"60px 0"}}>No spots match.</p>;
-  const groups=[];
-  let lastL="";
-  spots.forEach(spot=>{
-    const letter=spot.name[0].toUpperCase();
-    if(letter!==lastL){lastL=letter;groups.push({type:"header",letter,key:`h-${letter}`});}
-    groups.push({type:"spot",spot,key:`s-${spot.id}`});
-  });
-  return(
-    <div>
-      {groups.map(item=>{
-        if(item.type==="header") return(
-          <p key={item.key} style={{fontWeight:700,fontSize:11,color:T.muted,letterSpacing:"0.1em",textTransform:"uppercase",padding:"16px 0 8px"}}>{item.letter}</p>
-        );
-        const {spot}=item;
-        const locStr=getLoc(spot.loc,spot.outlets);
-        return(
-          <div key={item.key} className="lr" style={{display:"flex",gap:12,alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${T.sep}`}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:2}}>
-                <span style={{fontSize:14,fontWeight:600}}>{spot.name}</span>
-                <OutletBadge outlets={spot.outlets}/>
-                {spot.url?<VerifiedBadge/>:<Badge label="Add link?" bg="#FFF8E1" color={T.orange}/>}
-              </div>
-              <p style={{fontSize:12,color:T.muted}}>{spot.cat}{locStr?` · 📍 ${locStr}`:""}</p>
-              <DietTags spot={spot}/>
-            </div>
-            <div style={{display:"flex",gap:5,flexShrink:0}}>
-              {spot.url&&<a href={spot.url} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:T.blue,fontWeight:500,textDecoration:"none"}}>Visit</a>}
-              <button onClick={()=>onEdit(spot)} style={{background:"none",border:`1px solid ${T.border}`,borderRadius:8,padding:"3px 8px",fontSize:11,cursor:"pointer",color:T.muted,fontFamily:T.font}}>Edit</button>
-              <button onClick={()=>onFlag(spot)} style={{background:"none",border:"none",fontSize:11,cursor:"pointer",color:T.muted}}>⚑</button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── SPOT CARD ─────────────────────────────────────────────────────────────
-function SpotCard({spot,onRate,onFlag,onEdit}){
-  const avg=calcAvg(spot.stars);
-  const locStr=getLoc(spot.loc,spot.outlets);
-  const isHG=(spot.cat==="Home Baker"||spot.cat==="Hawker")&&(spot.wins+spot.losses)<5;
-  return(
-    <div style={{border:`1.5px solid ${T.border}`,borderRadius:16,padding:"16px 14px",display:"flex",flexDirection:"column",gap:6,transition:"box-shadow 0.12s",background:T.white}}
-      onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 14px rgba(0,0,0,0.07)"}
-      onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}
-    >
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-        <span style={{fontSize:10,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:"0.08em"}}>{spot.cat}</span>
-        <button onClick={()=>onFlag(spot)} style={{background:"none",border:"none",fontSize:12,cursor:"pointer",color:T.muted,padding:"0 0 0 4px"}}>⚑</button>
-      </div>
-      <span style={{fontSize:15,fontWeight:700,lineHeight:1.3,color:T.black}}>{spot.name}</span>
-      {locStr&&<span style={{fontSize:12,color:T.muted}}>📍 {locStr}</span>}
-      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-        <OutletBadge outlets={spot.outlets}/>
-        {spot.url?<VerifiedBadge/>:<Badge label="Add link?" bg="#FFF8E1" color={T.orange}/>}
-        {isHG&&<HiddenGemBadge/>}
-      </div>
-      <DietTags spot={spot}/>
-      {avg&&<div style={{display:"flex",alignItems:"center",gap:4}}><Stars value={parseFloat(avg)}/><span style={{fontSize:11,color:T.muted}}>({spot.stars.length})</span></div>}
-      <div style={{display:"flex",gap:6,marginTop:4}}>
-        <button onClick={()=>onRate(spot)} style={{flex:1,background:"none",border:`1px solid ${T.border}`,borderRadius:10,padding:"6px 0",fontSize:12,cursor:"pointer",color:T.muted,fontFamily:T.font}}>Rate</button>
-        {spot.url
-          ?<a href={spot.url} target="_blank" rel="noopener noreferrer" style={{flex:1,textAlign:"center",fontSize:12,color:T.blue,fontWeight:500,textDecoration:"none",border:`1px solid ${T.border}`,borderRadius:10,padding:"6px 0",display:"block"}}>Visit</a>
-          :<button onClick={()=>onEdit(spot)} style={{flex:1,background:"none",border:`1px solid ${T.orange}`,borderRadius:10,padding:"6px 0",fontSize:12,cursor:"pointer",color:T.orange,fontFamily:T.font,fontWeight:600}}>Add info</button>
-        }
-      </div>
-    </div>
-  );
-}
-
 // ── MAIN ─────────────────────────────────────────────────────────────────
 export default function MBBA(){
   const [spots,setSpots]     = useState([]);
   const [isLoading,setIsLoading] = useState(false);
   const [dbError,setDbError]   = useState(null); // null = no error, string = show banner
   const [section,setSection] = useState("vote");
+  const [showLanding,setShowLanding] = useState(()=>{
+    try{ return sessionStorage.getItem('mbba_seen_intro')!=='true'; }catch{ return true; }
+  });
+  const dismissLanding=useCallback(()=>{
+    try{ sessionStorage.setItem('mbba_seen_intro','true'); }catch{}
+    setShowLanding(false);
+  },[]);
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
   const [loser,setLoser]     = useState(null);
   const [sessionVotes,setSV] = useState(0);
   const [voteRounds,setVoteRounds] = useState(0);
   const [showAbout,setShowAbout]   = useState(false);
+  const [showFeedback,setShowFeedback] = useState(false);
   const [reviewSpot,setReviewSpot] = useState(null);
   const [editSpot,setEditSpot]     = useState(null);
   const [flagSpot,setFlagSpot]     = useState(null);
   const [shareSpot,setShareSpot]   = useState(null);
   const [shareIsWinner,setShareIsWinner] = useState(false);
   const [toast,setToast]     = useState(null);
-  const [search,setSearch]   = useState("");
-  const [fCat,setFCat]       = useState("All");
-  const [fHalal,setFHalal]   = useState(false);
-  const [fMuslim,setFMuslim] = useState(false);
-  const [fVegan,setFVegan]   = useState(false);
-  const [fDairy,setFDairy]   = useState(false);
-  const [fOutlets,setFOutlets] = useState(false);
-  const [fHidden,setFHidden] = useState(false);
-  const [dirSort,setDirSort] = useState("alpha");
   // Add form — separate state vars to avoid hooks-in-objects issues
   const [nName,setNName]=useState("");
   const [nLoc,setNLoc]=useState("");
@@ -1203,7 +1018,7 @@ const [nSG,setNSG]=useState(false);
 
   // Reload from DB when switching to rankings
   const handleSection=useCallback((s)=>{setSection(s);if(s==='rankings')reloadSpots();},[reloadSpots]);
-  const nav=[{key:"vote",label:"Vote"},{key:"rankings",label:"Rankings"},{key:"directory",label:"Directory"},{key:"add",label:"Add a spot"},{key:"feedback",label:"Feedback"}];
+  const skipBout=useCallback(()=>{setSpots(prev=>{setPair(randPair(prev));return prev;});setChosen(null);setLoser(null);},[]);
   const showToast=useCallback((msg)=>{setToast(msg);setTimeout(()=>setToast(null),2000);},[]);
 
   const handleNName=useCallback((val)=>{
@@ -1505,494 +1320,80 @@ const ranked = useMemo(() => [...spots].sort((a, b) => {
   return b.wins - a.wins;
 }), [spots]);
 
-
-  const filterFn=useCallback((list)=>list.filter(s=>{
-    if(fCat!=="All"&&s.cat!==fCat)return false;
-    if(fHalal&&!s.halal)return false;
-    if(fMuslim&&!s.muslimOwned)return false;
-    if(fVegan&&!s.vegan)return false;
-    if(fDairy&&!s.dairyFree)return false;
-    if(fOutlets&&s.outlets==="single")return false;
-    if(fHidden&&!((s.cat==="Home Baker"||s.cat==="Hawker")&&(s.wins+s.losses)<5))return false;
-    if(search&&!s.name.toLowerCase().includes(search.toLowerCase())&&!s.loc.toLowerCase().includes(search.toLowerCase()))return false;
-    return true;
-  }),[fCat,fHalal,fMuslim,fVegan,fDairy,fOutlets,fHidden,search]);
-
-  const filteredRanked=useMemo(()=>filterFn(ranked),[ranked,filterFn]);
-  const filteredAlpha=useMemo(()=>filterFn([...spots].sort((a,b)=>a.name.localeCompare(b.name))),[spots,filterFn]);
-  const filteredRecent=useMemo(()=>filterFn([...spots].sort((a,b)=>b.addedAt-a.addedAt)),[spots,filterFn]);
-
-  const openShare=(spot,isWinner=false)=>{setShareSpot(spot);setShareIsWinner(isWinner);};
-
-  const lbl={fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,display:"block",marginBottom:8};
-  const inp={width:"100%",padding:"12px 16px",borderRadius:12,border:`1.5px solid ${T.border}`,fontSize:16,fontFamily:T.font,color:T.black,background:T.white,outline:"none"};
-
   return(
-    <div style={{minHeight:"100vh",background:T.white,display:"flex",flexDirection:"column"}}>
+    <div className="mbba" style={{minHeight:"100vh",display:"flex",flexDirection:"column"}}>
       <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
-        html,body,#root{background:${T.white};font-family:${T.font};color:${T.black};-webkit-font-smoothing:antialiased;min-height:100%;}
-        html{height:100%;}
-        body{min-height:100%;background:${T.white} !important;margin:0;padding:0;}
+        html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;height:100%;}
+        html,body,#root{background:var(--crumb);font-family:var(--font-body);color:var(--crust);-webkit-font-smoothing:antialiased;min-height:100%;}
+        body{overscroll-behavior-y:contain;margin:0;padding:0;}
         #root{display:flex;flex-direction:column;min-height:100vh;}
-        body{overscroll-behavior-y:contain;}
-        button,input,textarea,select{font-family:${T.font};-webkit-appearance:none;appearance:none;}
+        button,input,textarea,select{font-family:inherit;color:inherit;-webkit-appearance:none;appearance:none;}
         input,textarea,select{font-size:16px !important;}
         button{touch-action:manipulation;}
+        button:active{opacity:0.85;}
         a{-webkit-tap-highlight-color:transparent;}
         img{max-width:100%;height:auto;display:block;}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes flash{0%,75%{background:${T.yellow};border-color:${T.black}}100%{background:${T.white};border-color:${T.border}}}
-        @keyframes fadeGone{to{opacity:0.15;transform:scale(0.96)}}
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-        .sec{animation:fadeUp 0.28s ease both;}
-        /* Touch-friendly tap targets — min 44px */
-        .card-hover{transition:box-shadow 0.14s,transform 0.14s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-        @media(hover:hover){.card-hover:hover{box-shadow:0 6px 20px rgba(0,0,0,0.09);transform:translateY(-2px);}}
-        .card-hover:active{transform:scale(0.97);}
-        .card-win{animation:flash 0.75s ease;cursor:default !important;}
-        .card-lose{animation:fadeGone 0.35s ease forwards;cursor:default !important;pointer-events:none;}
-        .lr{transition:transform 0.1s;}
-        @media(hover:hover){.lr:hover{transform:translateX(2px);}}
-        input:focus,textarea:focus{border-color:${T.black} !important;outline:none;}
-        /* Hide scrollbars everywhere */
         *{scrollbar-width:none;-ms-overflow-style:none;}
         *::-webkit-scrollbar{display:none;}
-        /* Nav breakpoints */
-        @media(max-width:560px){.dk-nav{display:none !important;}}
-        @media(min-width:561px){.mb-nav{display:none !important;}}
-        /* Safe area for notched phones */
-        .mb-nav{padding-bottom:max(18px, env(safe-area-inset-bottom)) !important;}
-        main{padding-bottom:calc(140px + env(safe-area-inset-bottom)) !important;}
-        /* Better tap feedback on pills and buttons */
-        button:active{opacity:0.75;}
-        /* Prevent text selection on interactive cards */
-        .card-hover{user-select:none;-webkit-user-select:none;}
       `}</style>
 
-      {showAbout   && <AboutSheet  onClose={()=>setShowAbout(false)}/>}
+      {showAbout    && <AboutSheet onClose={()=>setShowAbout(false)}/>}
+      {showFeedback && (
+        <FeedbackSheet
+          fbName={fbName} setFbName={setFbName}
+          fbEmail={fbEmail} setFbEmail={setFbEmail}
+          fbType={fbType} setFbType={setFbType}
+          fbMsg={fbMsg} setFbMsg={setFbMsg}
+          fbSending={fbSending} fbDone={fbDone} setFbDone={setFbDone} fbErr={fbErr}
+          submitFeedback={submitFeedback}
+          onClose={()=>setShowFeedback(false)}
+        />
+      )}
       {reviewSpot  && <ReviewSheet spot={reviewSpot}  onSubmit={(s,t)=>submitReview(reviewSpot.id,s,t)} onClose={()=>setReviewSpot(null)}/>}
       {editSpot    && <EditSheet   spot={editSpot}    onSubmit={submitEdit}  onClose={()=>setEditSpot(null)}/>}
       {flagSpot    && <FlagSheet   spot={flagSpot}    onFlag={(id,reason,other)=>flagListing(id,reason,other)}   onClose={()=>setFlagSpot(null)}/>}
       {shareSpot   && <ShareSheet  spot={shareSpot}   votes={sessionVotes}   isWinner={shareIsWinner} onClose={()=>setShareSpot(null)}/>}
 
-      {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:T.black,color:T.white,padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:500,zIndex:400,whiteSpace:"nowrap",animation:"toastIn 0.22s ease",pointerEvents:"none"}}>{toast}</div>}
+      {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:"var(--crust)",color:"var(--crumb)",padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:600,zIndex:400,whiteSpace:"nowrap",animation:"toastIn 0.22s ease",pointerEvents:"none"}}>{toast}</div>}
 
       {/* LOADING SCREEN */}
       {isLoading&&spots.length===0&&(
-        <div style={{position:"fixed",inset:0,background:T.white,zIndex:500,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+        <div style={{position:"fixed",inset:0,background:"var(--crumb)",zIndex:500,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
           <span style={{fontSize:48}}>🍌</span>
-          <p style={{fontSize:14,color:T.muted,fontFamily:T.font}}>Loading the directory…</p>
+          <p style={{fontSize:14,color:"var(--ink-soft)"}}>Loading the directory…</p>
         </div>
       )}
 
-      {/* DB error logged to console only — no banner */}
+      {showLanding ? (
+        <LandingPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} onEnter={dismissLanding}/>
+      ) : (
+        <>
+          {section==="vote" && (
+            <VotePage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} pair={pair} chosen={chosen} vote={vote} onSkip={skipBout} sessionVotes={sessionVotes}/>
+          )}
+          {section==="rankings" && (
+            <RankingsPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner}/>
+          )}
+          {section==="spots" && (
+            <SpotsPage
+              spots={spots} ranked={ranked}
+              nName={nName} setNName={setNName} handleNName={handleNName} dupWarn={dupWarn}
+              nLoc={nLoc} setNLoc={setNLoc} nUrl={nUrl} setNUrl={setNUrl}
+              nCat={nCat} setNCat={setNCat} nOut={nOut} setNOut={setNOut}
+              nHalal={nHalal} setNHalal={setNHalal} nMuslim={nMuslim} setNMuslim={setNMuslim}
+              nNoPorkLard={nNoPorkLard} setNNoPorkLard={setNNoPorkLard}
+              nVegan={nVegan} setNVegan={setNVegan} nDairy={nDairy} setNDairy={setNDairy}
+              nHidden={nHidden} setNHidden={setNHidden} nSG={nSG} setNSG={setNSG}
+              formErr={formErr} submitSpot={submitSpot}
+              onOpenAbout={()=>setShowAbout(true)} onOpenFeedback={()=>setShowFeedback(true)}
+            />
+          )}
 
-      {/* VERCEL ANALYTICS — enable in Vercel dashboard, then add:
-           import { Analytics } from '@vercel/analytics/react'
-           and place <Analytics /> here */}
-      {/* HEADER */}
-      <header style={{borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.white,zIndex:100}}>
-        <div style={{maxWidth:680,margin:"0 auto",padding:"0 20px",height:52,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
-          <button onClick={()=>setSection("vote")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-            <span style={{fontSize:18}}>🍌</span>
-            <span style={{fontSize:14,fontWeight:700,letterSpacing:"-0.3px",color:T.black}}>Make Banana Bread Again</span>
-          </button>
-          <nav className="dk-nav" style={{display:"flex",gap:0,alignItems:"center"}}>
-            {nav.map(n=>(
-              <button key={n.key} onClick={()=>handleSection(n.key)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"none",color:section===n.key?T.black:T.muted,fontSize:13,fontWeight:section===n.key?600:400,cursor:"pointer",textDecoration:section===n.key?"underline":"none",textUnderlineOffset:"3px"}}>{n.label}</button>
-            ))}
-            <button onClick={()=>setShowAbout(true)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"none",color:T.muted,fontSize:13,cursor:"pointer"}}>About</button>
-          </nav>
-        </div>
-      </header>
-
-      <main style={{maxWidth:680,margin:"0 auto",padding:"0 20px",background:T.white,flex:1,width:"100%"}}>
-
-        {/* ══ VOTE ══ */}
-        {section==="vote"&&(
-          <div className="sec">
-            <div style={{textAlign:"center",padding:"40px 0 28px"}}>
-              <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:T.muted,marginBottom:10}}>That list from Reddit.</p>
-              <h1 style={{fontSize:"clamp(24px,5.5vw,38px)",fontWeight:700,letterSpacing:"-0.8px",lineHeight:1.15,marginBottom:10,color:T.black}}>Which would you choose?</h1>
-              <p style={{fontSize:14,color:T.muted}}>{spots.length} spots</p>
-            </div>
-
-            {/* BOTW banner — live winner or top weekly score */}
-{(() => {
-  const score = (s) => Math.max(
-    Number(s.weekly_wins || 0),
-    Number(s.weeklyWins || 0),
-    Number(s.wins || 0),
-    Number(s.votes || 0),
-    Number(s.voteCount || 0)
-  );
-
- const sorted = [...spots].sort((a, b) => {
-  const aVotes = a.wins + a.losses;
-  const bVotes = b.wins + b.losses;
-
-  if (aVotes === 0 && bVotes === 0) return a.name.localeCompare(b.name);
-  if (aVotes === 0) return 1;
-  if (bVotes === 0) return -1;
-
-  const rankDiff = calcElo(b.wins, b.losses) - calcElo(a.wins, a.losses);
-  if (rankDiff !== 0) return rankDiff;
-
-  return b.wins - a.wins;
-});
-
-const liveWinner = sorted[0];
-
-  const displayName =
-    weeklyWinner?.spots?.name ||
-    liveWinner?.name ||
-    "No winner yet.";
-
-  const displayLoc =
-    weeklyWinner?.spots?.loc ||
-    liveWinner?.loc ||
-    "";
-
-const displayScore = liveWinner ? liveWinner.wins : 0;
-
-
-  return (
-    <div style={{
-      background:"#1A0800",
-      borderRadius:16,
-      padding:"16px 18px",
-      marginBottom:24,
-      display:"flex",
-      alignItems:"center",
-      justifyContent:"space-between",
-      gap:12
-    }}>
-      <div>
-        <p style={{
-          fontSize:10,
-          fontWeight:700,
-          letterSpacing:"0.12em",
-          textTransform:"uppercase",
-          color:"#C8960C",
-          marginBottom:2
-        }}>
-          Banana Bread of the Week
-        </p>
-
-        <p style={{
-          fontSize:14,
-          fontWeight:600,
-          color:"#FFE135",
-          marginBottom:2
-        }}>
-          {displayName}
-        </p>
-
-        <p style={{
-          fontSize:11,
-          color:"rgba(255,225,53,0.5)"
-        }}>
-          {displayScore > 0
-            ? `${displayScore} votes · ${displayLoc ? `📍 ${displayLoc}` : "Winner announced"}`
-            : "Vote now · Winner updates every Sunday 12pm SGT"}
-        </p>
-      </div>
-
-      <span style={{fontSize:28, flexShrink:0}}>🏆</span>
-    </div>
-  );
-})()}
-            {/* Cards */}
-            <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-              {pair.map((spot,idx)=>{
-                const other=pair[idx===0?1:0];
-                const isWin=chosen===spot.id;
-                const isLose=loser===spot.id;
-                const avg=calcAvg(spot.stars);
-                const locStr=getLoc(spot.loc,spot.outlets);
-                return(
-                  <div key={spot.id}
-                    className={`${!chosen?"card-hover":""} ${isWin?"card-win":""} ${isLose?"card-lose":""}`}
-                    onClick={()=>!chosen&&vote(spot,other)}
-                    style={{background:T.white,border:`1.5px solid ${T.border}`,borderRadius:20,padding:"22px 16px",display:"flex",flexDirection:"column",gap:7,boxShadow:"0 1px 4px rgba(0,0,0,0.05)",userSelect:"none",minHeight:"clamp(180px,42vw,240px)"}}
-                  >
-                    <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.muted}}>{spot.cat}</span>
-                    <span style={{fontSize:"clamp(14px,3.5vw,19px)",fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.25,color:T.black}}>{spot.name}</span>
-                    {locStr&&<span style={{fontSize:11,color:T.muted}}>📍 {locStr}</span>}
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                      <OutletBadge outlets={spot.outlets}/>
-                      {spot.url&&<VerifiedBadge/>}
-                    </div>
-                    <DietTags spot={spot}/>
-                    {avg&&<div style={{display:"flex",alignItems:"center",gap:3}}><Stars value={parseFloat(avg)} size={11}/><span style={{fontSize:10,color:T.muted}}>({spot.stars.length})</span></div>}
-                    {isWin&&<span style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.black,marginTop:"auto",paddingTop:6}}>Your pick</span>}
-                  </div>
-                );
-              })}
-              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:30,height:30,borderRadius:"50%",background:T.white,border:`1.5px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:T.muted,letterSpacing:"0.05em",zIndex:10,pointerEvents:"none",boxShadow:"0 1px 6px rgba(0,0,0,0.08)"}}>VS</div>
-            </div>
-
-            {/* Session vote counter */}
-            {sessionVotes>0&&(
-              <p style={{textAlign:"center",fontSize:12,color:T.muted,marginTop:8}}>{sessionVotes} vote{sessionVotes!==1?"s":""} this session</p>
-            )}
-
-            {/* Post-vote actions */}
-            <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:14,flexWrap:"wrap"}}>
-              <button onClick={()=>{setSpots(prev=>{setPair(randPair(prev));return prev;});setChosen(null);setLoser(null);}} style={{background:"none",border:"none",color:T.muted,fontSize:13,cursor:"pointer",fontFamily:T.font,padding:"4px 8px"}}>Skip</button>
-              {chosen&&(
-                <>
-                  <button onClick={()=>setReviewSpot(spots.find(s=>s.id===chosen))} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:20,color:T.black,fontSize:13,fontWeight:500,cursor:"pointer",padding:"5px 16px",fontFamily:T.font}}>Rate it</button>
-                  <button onClick={()=>openShare(spots.find(s=>s.id===chosen),false)} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:20,color:T.black,fontSize:13,fontWeight:500,cursor:"pointer",padding:"5px 16px",fontFamily:T.font}}>Share badge</button>
-                </>
-              )}
-            </div>
-
-            {/* Live top 5 */}
-            {voteRounds>=3&&ranked.filter(s=>s.wins+s.losses>0).length>=3&&(
-              <div style={{marginTop:44,paddingTop:28,borderTop:`1px solid ${T.border}`}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:16}}>
-                  <h2 style={{fontSize:17,fontWeight:700}}>Leading right now</h2>
-                  <button onClick={()=>setSection("rankings")} style={{background:"none",border:"none",color:T.blue,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:T.font}}>See all</button>
-                </div>
-                {ranked.filter(s=>s.wins+s.losses>0).slice(0,5).map((s,i)=>(
-                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:`1px solid ${T.sep}`}}>
-                    <span style={{fontSize:12,fontWeight:700,color:T.muted,minWidth:20,textAlign:"center"}}>{i+1}</span>
-                    <span style={{flex:1,fontSize:14,fontWeight:600}}>{s.name}</span>
-                    {calcAvg(s.stars)&&<Stars value={parseFloat(calcAvg(s.stars))} size={11}/>}
-                    <span style={{fontSize:12,color:T.muted}}>{s.wins}W {s.losses}L</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ══ RANKINGS ══ */}
-        {section==="rankings"&&(
-          <div className="sec" style={{paddingTop:40}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:8}}>
-              <h1 style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px"}}>Rankings</h1>
-              <span style={{fontSize:13,color:T.muted}}>{filteredRanked.length} spots</span>
-            </div>
-            <p style={{fontSize:13,color:T.muted,marginBottom:24}}>Community votes only. <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.blue,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:T.font}}>About this</button></p>
-            <Filters {...{fCat,setFCat,fHalal,setFHalal,fMuslim,setFMuslim,fVegan,setFVegan,fDairy,setFDairy,fOutlets,setFOutlets,fHidden,setFHidden,search,setSearch}}/>
-            {filteredRanked.length===0&&(
-              <div style={{textAlign:"center",padding:"60px 0",color:T.muted}}>
-                <p style={{fontSize:15,marginBottom:12}}>No spots match.</p>
-                <button onClick={()=>{setFCat("All");setFHalal(false);setFMuslim(false);setFVegan(false);setFDairy(false);setFOutlets(false);setFHidden(false);setSearch("");}} style={{padding:"6px 16px",borderRadius:20,border:`1.5px solid ${T.border}`,background:T.white,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:T.font}}>Clear filters</button>
-              </div>
-            )}
-            {filteredRanked.map(spot=>{
-              const rank=ranked.indexOf(spot)+1;
-              const total=spot.wins+spot.losses;
-              const avg=calcAvg(spot.stars);
-              const topTags=Object.entries(spot.tags).sort((a,b)=>b[1]-a[1]).slice(0,3);
-              const locStr=getLoc(spot.loc,spot.outlets);
-              const isHG=(spot.cat==="Home Baker"||spot.cat==="Hawker")&&total<5;
-              return(
-                <div key={spot.id} className="lr" style={{padding:"14px 0",borderBottom:`1px solid ${T.sep}`,display:"flex",gap:12,alignItems:"flex-start"}}>
-                  <span style={{fontSize:13,fontWeight:700,color:rank<=3?T.black:T.muted,minWidth:24,paddingTop:2}}>{rank<=3?["🥇","🥈","🥉"][rank-1]:rank}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",marginBottom:3}}>
-                      <span style={{fontSize:15,fontWeight:700}}>{spot.name}</span>
-                      <OutletBadge outlets={spot.outlets}/>
-                      {spot.url&&<VerifiedBadge/>}
-                      {isHG&&<HiddenGemBadge/>}
-                    </div>
-                    <p style={{fontSize:12,color:T.muted,marginBottom:5}}>{spot.cat}{locStr?` · 📍 ${locStr}`:""}</p>
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-                      <DietTags spot={spot}/>
-                      {topTags.map(([tag,count])=><span key={tag} style={{fontSize:10,color:T.muted,background:T.sep,borderRadius:6,padding:"2px 7px"}}>{tag} ({count})</span>)}
-                    </div>
-                    {total>0&&<div style={{height:2,background:T.sep,borderRadius:2,marginTop:8,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round((spot.wins/total)*100)}%`,background:T.yellow,borderRadius:2,transition:"width 0.4s"}}/></div>}
-                  </div>
-                  <div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
-                    {avg&&<Stars value={parseFloat(avg)} size={11}/>}
-                    <span style={{fontSize:11,color:T.muted}}>{spot.wins}W {spot.losses}L</span>
-                    <div style={{display:"flex",gap:5,marginTop:2,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                      {spot.url&&<a href={spot.url} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:T.blue,fontWeight:500,textDecoration:"none"}}>Visit</a>}
-                      <button onClick={()=>setReviewSpot(spot)} style={{background:"none",border:`1px solid ${T.border}`,borderRadius:8,padding:"3px 8px",fontSize:11,cursor:"pointer",color:T.muted,fontFamily:T.font}}>Rate</button>
-                      <button onClick={()=>setEditSpot(spot)} style={{background:"none",border:`1px solid ${T.border}`,borderRadius:8,padding:"3px 8px",fontSize:11,cursor:"pointer",color:T.muted,fontFamily:T.font}}>Edit</button>
-                      <button onClick={()=>setFlagSpot(spot)} style={{background:"none",border:"none",fontSize:11,cursor:"pointer",color:T.muted,padding:"3px 2px"}}>⚑</button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:28,lineHeight:1.6}}>Rankings reflect community votes for discovery only. Not a professional review or endorsement. <button onClick={()=>setShowAbout(true)} style={{background:"none",border:"none",color:T.muted,fontSize:11,cursor:"pointer",fontFamily:T.font,textDecoration:"underline",textUnderlineOffset:"2px",padding:0}}>About · Disclaimer</button></p>
-          </div>
-        )}
-
-        {/* ══ DIRECTORY ══ */}
-        {section==="directory"&&(
-          <div className="sec" style={{paddingTop:40}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:8}}>
-              <h1 style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px"}}>Directory</h1>
-              <button onClick={()=>setSection("add")} style={{background:"none",border:"none",color:T.blue,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:T.font}}>Add a spot</button>
-            </div>
-            <p style={{fontSize:13,color:T.muted,marginBottom:20}}>{spots.length} spots.</p>
-            <div style={{display:"flex",gap:6,marginBottom:16}}>
-              <Pill active={dirSort==="alpha"}  onClick={()=>setDirSort("alpha")}>A–Z</Pill>
-              <Pill active={dirSort==="ranked"} onClick={()=>setDirSort("ranked")}>Top rated</Pill>
-              <Pill active={dirSort==="new"}    onClick={()=>setDirSort("new")}>Recently added</Pill>
-            </div>
-            <Filters {...{fCat,setFCat,fHalal,setFHalal,fMuslim,setFMuslim,fVegan,setFVegan,fDairy,setFDairy,fOutlets,setFOutlets,fHidden,setFHidden,search,setSearch}}/>
-            {dirSort==="alpha"
-              ?<AlphaList spots={filteredAlpha} onEdit={setEditSpot} onFlag={setFlagSpot}/>
-              :(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(168px,1fr))",gap:10}}>
-                  {(dirSort==="ranked"?filteredRanked:filteredRecent).map(spot=>(
-                    <SpotCard key={spot.id} spot={spot} onRate={setReviewSpot} onFlag={setFlagSpot} onEdit={setEditSpot}/>
-                  ))}
-                  {(dirSort==="ranked"?filteredRanked:filteredRecent).length===0&&<p style={{textAlign:"center",color:T.muted,padding:"60px 0",gridColumn:"1/-1"}}>No spots match.</p>}
-                </div>
-              )
-            }
-            <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:32,lineHeight:1.6}}>Listings are community-submitted. MBBA does not verify accuracy. Businesses may request removal.</p>
-          </div>
-        )}
-
-        {/* ══ ADD ══ */}
-        {section==="add"&&(
-          <div className="sec" style={{paddingTop:40}}>
-            <h1 style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginBottom:8}}>Add a spot</h1>
-            <p style={{fontSize:13,color:T.muted,marginBottom:28}}>Know somewhere selling banana bread or cake in Singapore? Add it. Goes live immediately.</p>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Name</label>
-              <input type="text" value={nName} onChange={e=>handleNName(e.target.value)} placeholder="e.g. Plain Vanilla" style={inp}/>
-              {dupWarn&&<div style={{marginTop:8,background:"#FFF8E1",border:`1px solid ${T.orange}`,borderRadius:10,padding:"10px 14px",fontSize:13,color:"#5C3A00"}}>⚠️ Might already be listed: <strong>{dupWarn.name}</strong> ({dupWarn.loc}). Is this a different place?</div>}
-            </div>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Location or area</label>
-              <input type="text" value={nLoc} onChange={e=>setNLoc(e.target.value)} placeholder="e.g. Joo Chiat" style={inp}/>
-            </div>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Instagram, website, or link <span style={{fontWeight:400,textTransform:"none",letterSpacing:0,color:T.muted}}>(optional)</span></label>
-              <input type="url" value={nUrl} onChange={e=>setNUrl(e.target.value)} placeholder="https://instagram.com/yourbrand" style={inp}/>
-              <p style={{fontSize:11,color:T.muted,marginTop:5}}>Helps people find you. Earns a "Link provided" badge.</p>
-            </div>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Category</label>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{CATS.map(c=><Pill key={c} active={nCat===c} onClick={()=>setNCat(c)}>{c}</Pill>)}</div>
-            </div>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Outlets</label>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["single","Single location"],["multiple","Multiple outlets"],["island-wide","Island-wide"]].map(([v,l])=><Pill key={v} active={nOut===v} onClick={()=>setNOut(v)}>{l}</Pill>)}
-              </div>
-            </div>
-            <div style={{marginBottom:18}}>
-              <label style={lbl}>Tags</label>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[
-  ["Halal",nHalal,setNHalal],
-  ["Muslim-owned",nMuslim,setNMuslim],
-  ["No pork, no lard",nNoPorkLard,setNNoPorkLard],
-  ["Vegan",nVegan,setNVegan],
-  ["Dairy-free",nDairy,setNDairy],
-].map(([l,v,s])=>(
-                  <Pill key={l} active={v} onClick={()=>s(prev=>!prev)}>{l}</Pill>
-                ))}
-              </div>
-            </div>
-            <div style={{marginBottom:24,background:T.sep,borderRadius:12,padding:"14px 16px",display:"flex",alignItems:"flex-start",gap:12,cursor:"pointer"}} onClick={()=>setNSG(prev=>!prev)}>
-              <div style={{width:20,height:20,borderRadius:6,border:`1.5px solid ${nSG?T.black:T.border}`,background:nSG?T.yellow:T.white,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
-                {nSG&&<span style={{fontSize:12,fontWeight:700}}>✓</span>}
-              </div>
-              <div>
-                <p style={{fontSize:14,fontWeight:600,color:T.black,marginBottom:2}}>This business is in Singapore</p>
-                <p style={{fontSize:12,color:T.muted}}>MBBA is a Singapore-only directory for now.</p>
-              </div>
-            </div>
-            {formErr&&<p style={{fontSize:13,color:T.red,marginBottom:12,fontWeight:600}}>{formErr}</p>}
-            <button onClick={submitSpot} style={{width:"100%",padding:"15px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:T.font,transition:"background 0.15s"}}
-              onMouseEnter={e=>e.currentTarget.style.background=T.yellow}
-              onMouseLeave={e=>e.currentTarget.style.background=T.white}>
-              Add to the vote
-            </button>
-            <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:10,lineHeight:1.6}}>By submitting you confirm this is a real business selling banana bread or cake in Singapore.</p>
-          </div>
-        )}
-
-        {/* ══ FEEDBACK ══ */}
-        {section==="feedback"&&(
-          <div className="sec" style={{paddingTop:40}}>
-            <h1 style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginBottom:8}}>Feedback</h1>
-            <p style={{fontSize:13,color:T.muted,marginBottom:28,lineHeight:1.6}}>
-              Got a suggestion, spotted an issue, or want to say something? We read every message.
-              Reach us directly at{" "}
-              <a href="mailto:thatbananabreadcompany@gmail.com" style={{color:T.blue,textDecoration:"none",fontWeight:500}}>
-                thatbananabreadcompany@gmail.com
-              </a>
-              {" "}or use the form below.
-            </p>
-
-            {fbDone?(
-              <div style={{background:"#F0FDF4",border:`1.5px solid ${T.green}`,borderRadius:16,padding:"28px 20px",textAlign:"center"}}>
-                <p style={{fontSize:22,marginBottom:8}}>🍌</p>
-                <p style={{fontSize:16,fontWeight:700,color:T.black,marginBottom:6}}>Message sent.</p>
-                <p style={{fontSize:13,color:T.muted,lineHeight:1.6}}>Thanks for taking the time. We'll get back to you if needed at <span style={{color:T.black,fontWeight:500}}>{fbEmail||"the email you provided"}</span>.</p>
-                <button onClick={()=>setFbDone(false)} style={{marginTop:20,padding:"10px 24px",borderRadius:20,border:`1.5px solid ${T.border}`,background:T.white,color:T.black,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:T.font}}>
-                  Send another
-                </button>
-              </div>
-            ):(
-              <>
-                <div style={{marginBottom:18}}>
-                  <label style={lbl}>Type</label>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {["General feedback","Suggest a spot","Report an issue","Partnership enquiry","Other"].map(t=>(
-                      <Pill key={t} active={fbType===t} onClick={()=>setFbType(t)}>{t}</Pill>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{marginBottom:18}}>
-                  <label style={lbl}>Name <span style={{fontWeight:400,textTransform:"none",letterSpacing:0,color:T.muted}}>(optional)</span></label>
-                  <input type="text" value={fbName} onChange={e=>setFbName(e.target.value)} placeholder="Your name" style={inp}/>
-                </div>
-
-                <div style={{marginBottom:18}}>
-                  <label style={lbl}>Email <span style={{fontWeight:400,textTransform:"none",letterSpacing:0,color:T.muted}}>(optional — only if you want a reply)</span></label>
-                  <input type="email" value={fbEmail} onChange={e=>setFbEmail(e.target.value)} placeholder="your@email.com" style={inp}/>
-                </div>
-
-                <div style={{marginBottom:24}}>
-                  <label style={lbl}>Message</label>
-                  <textarea value={fbMsg} onChange={e=>setFbMsg(e.target.value)} placeholder="Tell us anything..." rows={5}
-                    style={{...inp,resize:"vertical",minHeight:120,lineHeight:1.6}}/>
-                </div>
-
-                {fbErr&&<p style={{fontSize:13,color:T.red,marginBottom:12,fontWeight:600}}>{fbErr}</p>}
-
-                <button onClick={submitFeedback} disabled={fbSending}
-                  style={{width:"100%",padding:"15px",borderRadius:14,border:`1.5px solid ${T.black}`,background:T.white,color:T.black,fontSize:15,fontWeight:600,cursor:fbSending?"default":"pointer",fontFamily:T.font,transition:"background 0.15s",opacity:fbSending?0.6:1}}
-                  onMouseEnter={e=>{if(!fbSending)e.currentTarget.style.background=T.yellow;}}
-                  onMouseLeave={e=>e.currentTarget.style.background=T.white}>
-                  {fbSending?"Sending…":"Send message"}
-                </button>
-
-                <p style={{fontSize:11,color:T.muted,textAlign:"center",marginTop:10,lineHeight:1.6}}>
-                  We respond to partnership enquiries and legitimate issues. Not everything will get a reply but everything gets read.
-                </p>
-              </>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* MOBILE NAV */}
-      <nav className="mb-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:T.white,borderTop:`1px solid ${T.border}`,zIndex:100,padding:"8px 12px 0",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",alignItems:"center"}}>
-        {[...nav,{key:"about",label:"About"}].map(n=>(
-          <button key={n.key} onClick={()=>n.key==="about"?setShowAbout(true):handleSection(n.key)}
-            style={{flexShrink:0,padding:"7px 16px",borderRadius:20,border:`1.5px solid ${section===n.key&&n.key!=="about"?T.black:T.border}`,background:section===n.key&&n.key!=="about"?T.yellow:T.white,color:T.black,fontSize:13,fontWeight:section===n.key&&n.key!=="about"?700:400,cursor:"pointer",fontFamily:T.font,whiteSpace:"nowrap"}}>
-            {n.label}
-          </button>
-        ))}
-      </nav>
+          <BottomNav section={section} onSelect={handleSection}/>
+        </>
+      )}
     </div>
   );
 }
