@@ -1037,17 +1037,14 @@ const [nSG,setNSG]=useState(false);
       if(s.id===loserSpot.id)return{...s,losses:s.losses+1};
       return s;
     }));
-    // Write to Supabase — fetch current value then increment to avoid race conditions
+    // Write to Supabase via a SECURITY DEFINER RPC (see
+    // supabase/migrations/0001_harden_spots_rls.sql). Spots no longer has a
+    // public UPDATE policy, since a raw client-side PATCH let anyone set
+    // wins/losses to any value on any row — this atomically does exactly
+    // +1/+1 server-side and nothing else.
     const db=getSupabase();
     const wid=winner.id, lid=loserSpot.id;
-    Promise.all([
-      db.select('spots',`select=id,wins,weekly_wins&id=eq.${wid}`),
-      db.select('spots',`select=id,losses&id=eq.${lid}`),
-    ]).then(([wRows,lRows])=>{
-      const w=wRows&&wRows[0], l=lRows&&lRows[0];
-      if(w) db.update('spots',{wins:(w.wins||0)+1,weekly_wins:(w.weekly_wins||0)+1},{id:wid}).catch(()=>{});
-      if(l) db.update('spots',{losses:(l.losses||0)+1},{id:lid}).catch(()=>{});
-    }).catch(()=>{});
+    db.rpc('cast_vote',{p_winner_id:wid,p_loser_id:lid}).catch(()=>{});
     db.insert('votes',{winner_id:wid,loser_id:lid,session_id:SESSION_ID}).catch(()=>{});
     // Always advance regardless of DB result
     setTimeout(()=>{
