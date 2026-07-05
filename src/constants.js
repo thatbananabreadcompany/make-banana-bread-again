@@ -1,5 +1,7 @@
 export const CATS = ["Café","Restaurant","Chain","Heritage","Hawker","Home Baker","Bakery","Confectionery","Japanese","Korean","Hotel"];
 
+export const REDDIT_THREAD_URL = "https://www.reddit.com/r/SingaporeEats/s/tObi79RyAt";
+
 export const DESCRIPTORS = {
   Texture: ["Moist","Dense","Light","Cakey","Crusty top","Gooey"],
   Flavour: ["Fragrant","Strong banana","Subtle","Well balanced","Too sweet","Artificial taste","Real banana"],
@@ -23,7 +25,7 @@ export const DISCLAIMER = "All rankings and ratings on this website are based on
 export const CONTACT = "thatbananabreadcompany@gmail.com";
 
 export const FAQS = [
-  { q:"What is Make Banana Bread Again?", a:"A community game and directory celebrating Singapore's banana bread scene. It started with a Reddit thread on r/SingaporeEats. The community kept adding more. MBBA is what happened next.", link:{label:"See the original Reddit thread",url:"https://www.reddit.com/r/SingaporeEats/s/tObi79RyAt"}},
+  { q:"What is Make Banana Bread Again?", a:"A community game and directory celebrating Singapore's banana bread scene. It started with a Reddit thread on r/SingaporeEats. The community kept adding more. MBBA is what happened next.", link:{label:"See the original Reddit thread",url:REDDIT_THREAD_URL}},
   { q:"Are these rankings official?", a:"No. Rankings reflect community votes only. They are for discovery and entertainment. Nothing here is a professional review, a competition, or a commercial endorsement of any business.", link:null},
   { q:"What is Banana Bread of the Week?", a:"Every week, votes are tallied and the community crowns a winner. The winner is announced every Sunday at noon SGT. The featured spot gets a banner on MBBA and a shareable winner badge. We reach out to the winner about discount codes or special offers for the community. Votes close every Saturday at 11:59pm SGT.", link:null},
   { q:"How do I get my business listed?", a:`Anyone can add a spot using the Add section. Submissions go live immediately. To update or remove your listing contact us at ${CONTACT}`, link:null},

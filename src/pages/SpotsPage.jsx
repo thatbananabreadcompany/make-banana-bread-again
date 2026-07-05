@@ -28,7 +28,7 @@ export default function SpotsPage({
   nHalal, setNHalal, nMuslim, setNMuslim, nNoPorkLard, setNNoPorkLard,
   nVegan, setNVegan, nDairy, setNDairy, nHidden, setNHidden,
   nSG, setNSG, formErr, submitSpot,
-  onOpenAbout, onOpenFeedback,
+  onGoHome,
 }) {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
@@ -69,11 +69,11 @@ export default function SpotsPage({
         ]}
       />
       <header className="mbba-top">
-        <span className="mbba-brand">MBBA <em>the spots</em></span>
+        <button className="mbba-brand" onClick={onGoHome} aria-label="Back to home">MBBA <em>the spots</em></button>
         <span className="mbba-badge plain">{spots.length} SPOTS</span>
       </header>
 
-      <main className="mbba-stage" style={{ paddingTop: 6, paddingBottom: 150 }}>
+      <main className="mbba-stage" style={{ paddingTop: 6, paddingBottom: 178 }}>
         <h1 className="mbba-headline">Every <em>loaf</em> in the city</h1>
         <p className="mbba-sub" style={{ marginBottom: 16 }}>Every spot here is in the running. Grouped by hood so you can plan the pilgrimage.</p>
 
@@ -121,11 +121,6 @@ export default function SpotsPage({
             </div>
           ))
         )}
-
-        <div className="mbba-footer-links">
-          <button className="mbba-foot-link" onClick={onOpenFeedback}>Feedback</button>
-          <button className="mbba-foot-link" onClick={onOpenAbout}>About</button>
-        </div>
       </main>
 
       <button className="mbba-fab" onClick={() => openAddWithName()}>+ Add a spot</button>

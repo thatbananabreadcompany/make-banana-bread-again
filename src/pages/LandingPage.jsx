@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import Ticker from "../components/Ticker.jsx";
-import { CATS } from "../constants.js";
+import { CATS, REDDIT_THREAD_URL } from "../constants.js";
 
 function locText(spot) {
   if (spot.outlets === "island-wide") return "Island-wide";
@@ -72,7 +72,7 @@ export default function LandingPage({ spots, ranked, weeklyWinner, onEnter }) {
 
       <header className="landing-hero">
         <div className="landing-vs" aria-hidden="true">VS</div>
-        <span className="landing-stub">Est. from a Reddit thread</span>
+        <a className="landing-stub" href={REDDIT_THREAD_URL} target="_blank" rel="noopener noreferrer">Est. from a Reddit thread ↗</a>
         <p className="mbba-kicker landing-hero-kicker">Singapore's banana bread, put to a vote</p>
         <h1 className="landing-thesis">
           <span className="landing-line"><span>THE BEST LOAF</span></span>

@@ -910,6 +910,7 @@ export default function MBBA(){
     try{ sessionStorage.setItem('mbba_seen_intro','true'); }catch{}
     setShowLanding(false);
   },[]);
+  const goHome=useCallback(()=>setShowLanding(true),[]);
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
   const [loser,setLoser]     = useState(null);
@@ -1371,10 +1372,10 @@ const ranked = useMemo(() => [...spots].sort((a, b) => {
       ) : (
         <>
           {section==="vote" && (
-            <VotePage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} pair={pair} chosen={chosen} vote={vote} onSkip={skipBout} sessionVotes={sessionVotes}/>
+            <VotePage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} pair={pair} chosen={chosen} vote={vote} onSkip={skipBout} sessionVotes={sessionVotes} onGoHome={goHome}/>
           )}
           {section==="rankings" && (
-            <RankingsPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner}/>
+            <RankingsPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} onGoHome={goHome}/>
           )}
           {section==="spots" && (
             <SpotsPage
@@ -1387,11 +1388,11 @@ const ranked = useMemo(() => [...spots].sort((a, b) => {
               nVegan={nVegan} setNVegan={setNVegan} nDairy={nDairy} setNDairy={setNDairy}
               nHidden={nHidden} setNHidden={setNHidden} nSG={nSG} setNSG={setNSG}
               formErr={formErr} submitSpot={submitSpot}
-              onOpenAbout={()=>setShowAbout(true)} onOpenFeedback={()=>setShowFeedback(true)}
+              onGoHome={goHome}
             />
           )}
 
-          <BottomNav section={section} onSelect={handleSection}/>
+          <BottomNav section={section} onSelect={handleSection} onOpenFeedback={()=>setShowFeedback(true)} onOpenAbout={()=>setShowAbout(true)}/>
         </>
       )}
     </div>
