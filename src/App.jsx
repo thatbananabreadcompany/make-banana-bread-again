@@ -7,6 +7,7 @@ import FeedbackSheet from "./components/FeedbackSheet.jsx";
 import VotePage from "./pages/VotePage.jsx";
 import RankingsPage from "./pages/RankingsPage.jsx";
 import SpotsPage from "./pages/SpotsPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 const T = {
   white:  "#FFFFFF",
@@ -902,6 +903,13 @@ export default function MBBA(){
   const [isLoading,setIsLoading] = useState(false);
   const [dbError,setDbError]   = useState(null); // null = no error, string = show banner
   const [section,setSection] = useState("vote");
+  const [showLanding,setShowLanding] = useState(()=>{
+    try{ return sessionStorage.getItem('mbba_seen_intro')!=='true'; }catch{ return true; }
+  });
+  const dismissLanding=useCallback(()=>{
+    try{ sessionStorage.setItem('mbba_seen_intro','true'); }catch{}
+    setShowLanding(false);
+  },[]);
   const [pair,setPair]       = useState(()=>randPair(SEED));
   const [chosen,setChosen]   = useState(null);
   const [loser,setLoser]     = useState(null);
@@ -1361,28 +1369,34 @@ const ranked = useMemo(() => [...spots].sort((a, b) => {
         </div>
       )}
 
-      {section==="vote" && (
-        <VotePage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} pair={pair} chosen={chosen} vote={vote} onSkip={skipBout} sessionVotes={sessionVotes}/>
-      )}
-      {section==="rankings" && (
-        <RankingsPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner}/>
-      )}
-      {section==="spots" && (
-        <SpotsPage
-          spots={spots} ranked={ranked}
-          nName={nName} setNName={setNName} handleNName={handleNName} dupWarn={dupWarn}
-          nLoc={nLoc} setNLoc={setNLoc} nUrl={nUrl} setNUrl={setNUrl}
-          nCat={nCat} setNCat={setNCat} nOut={nOut} setNOut={setNOut}
-          nHalal={nHalal} setNHalal={setNHalal} nMuslim={nMuslim} setNMuslim={setNMuslim}
-          nNoPorkLard={nNoPorkLard} setNNoPorkLard={setNNoPorkLard}
-          nVegan={nVegan} setNVegan={setNVegan} nDairy={nDairy} setNDairy={setNDairy}
-          nHidden={nHidden} setNHidden={setNHidden} nSG={nSG} setNSG={setNSG}
-          formErr={formErr} submitSpot={submitSpot}
-          onOpenAbout={()=>setShowAbout(true)} onOpenFeedback={()=>setShowFeedback(true)}
-        />
-      )}
+      {showLanding ? (
+        <LandingPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} onEnter={dismissLanding}/>
+      ) : (
+        <>
+          {section==="vote" && (
+            <VotePage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner} pair={pair} chosen={chosen} vote={vote} onSkip={skipBout} sessionVotes={sessionVotes}/>
+          )}
+          {section==="rankings" && (
+            <RankingsPage spots={spots} ranked={ranked} weeklyWinner={weeklyWinner}/>
+          )}
+          {section==="spots" && (
+            <SpotsPage
+              spots={spots} ranked={ranked}
+              nName={nName} setNName={setNName} handleNName={handleNName} dupWarn={dupWarn}
+              nLoc={nLoc} setNLoc={setNLoc} nUrl={nUrl} setNUrl={setNUrl}
+              nCat={nCat} setNCat={setNCat} nOut={nOut} setNOut={setNOut}
+              nHalal={nHalal} setNHalal={setNHalal} nMuslim={nMuslim} setNMuslim={setNMuslim}
+              nNoPorkLard={nNoPorkLard} setNNoPorkLard={setNNoPorkLard}
+              nVegan={nVegan} setNVegan={setNVegan} nDairy={nDairy} setNDairy={setNDairy}
+              nHidden={nHidden} setNHidden={setNHidden} nSG={nSG} setNSG={setNSG}
+              formErr={formErr} submitSpot={submitSpot}
+              onOpenAbout={()=>setShowAbout(true)} onOpenFeedback={()=>setShowFeedback(true)}
+            />
+          )}
 
-      <BottomNav section={section} onSelect={handleSection}/>
+          <BottomNav section={section} onSelect={handleSection}/>
+        </>
+      )}
     </div>
   );
 }
