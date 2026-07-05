@@ -19,7 +19,7 @@ function flavorTag(spot) {
   return "In the running";
 }
 
-export default function VotePage({ spots, ranked, weeklyWinner, pair, chosen, vote, onSkip, sessionVotes }) {
+export default function VotePage({ spots, ranked, weeklyWinner, pair, chosen, vote, onSkip, sessionVotes, onGoHome }) {
   const [result, setResult] = useState(null);
   const [barA, setBarA] = useState(50);
   const [barB, setBarB] = useState(50);
@@ -72,7 +72,7 @@ export default function VotePage({ spots, ranked, weeklyWinner, pair, chosen, vo
         ]}
       />
       <header className="mbba-top">
-        <span className="mbba-brand">MBBA <em>the vote</em></span>
+        <button className="mbba-brand" onClick={onGoHome} aria-label="Back to home">MBBA <em>the vote</em></button>
         <span className="mbba-badge">🔥 {sessionVotes} today</span>
       </header>
 

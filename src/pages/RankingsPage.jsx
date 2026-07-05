@@ -34,7 +34,7 @@ function isoWeek(date) {
   return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 }
 
-export default function RankingsPage({ spots, ranked, weeklyWinner }) {
+export default function RankingsPage({ spots, ranked, weeklyWinner, onGoHome }) {
   const [activeFilter, setActiveFilter] = useState("All");
 
   const filtered = useMemo(() => ranked.filter(s => {
@@ -73,7 +73,7 @@ export default function RankingsPage({ spots, ranked, weeklyWinner }) {
         ]}
       />
       <header className="mbba-top">
-        <span className="mbba-brand">MBBA <em>standings</em></span>
+        <button className="mbba-brand" onClick={onGoHome} aria-label="Back to home">MBBA <em>standings</em></button>
         <span className="mbba-badge plain">WK {isoWeek(new Date())}</span>
       </header>
 
