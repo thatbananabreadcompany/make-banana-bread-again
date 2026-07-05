@@ -216,6 +216,8 @@
   box-shadow: 4px 4px 0 var(--crust);
   width: 100%;
   text-align: left;
+  text-decoration: none;
+  color: inherit;
   transition: transform .12s ease, box-shadow .12s ease;
 }
 .mbba-row:active{ transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--crust); }
