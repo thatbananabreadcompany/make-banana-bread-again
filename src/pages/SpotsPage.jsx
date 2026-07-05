@@ -101,8 +101,10 @@ export default function SpotsPage({
               {items.map(spot => {
                 const rank = ranked.indexOf(spot) + 1;
                 const isNew = Date.now() - spot.addedAt < 3 * 86400000;
+                const Row = spot.url ? "a" : "div";
+                const linkProps = spot.url ? { href: spot.url, target: "_blank", rel: "noopener noreferrer" } : {};
                 return (
-                  <div key={spot.id} className="mbba-row">
+                  <Row key={spot.id} className="mbba-row" {...linkProps}>
                     <div className="mbba-row-info">
                       <div className="mbba-row-name">{spot.name}</div>
                       <div className="mbba-row-meta">{spot.cat}</div>
@@ -112,8 +114,8 @@ export default function SpotsPage({
                         {dietTags(spot).map(t => <span key={t} className="mbba-b">{t}</span>)}
                       </div>
                     </div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: 18, flex: "0 0 auto", color: "var(--ink-soft)" }}>→</div>
-                  </div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: 18, flex: "0 0 auto", color: "var(--ink-soft)" }}>{spot.url ? "↗" : "→"}</div>
+                  </Row>
                 );
               })}
             </div>

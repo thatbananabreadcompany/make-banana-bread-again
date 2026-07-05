@@ -111,8 +111,10 @@ export default function RankingsPage({ spots, ranked, weeklyWinner }) {
           const rank = ranked.indexOf(spot) + 1;
           const total = spot.wins + spot.losses;
           const move = moveFor(spot);
+          const Row = spot.url ? "a" : "div";
+          const linkProps = spot.url ? { href: spot.url, target: "_blank", rel: "noopener noreferrer" } : {};
           return (
-            <div key={spot.id} className="mbba-row" style={{ cursor: "default" }}>
+            <Row key={spot.id} className="mbba-row" style={spot.url ? undefined : { cursor: "default" }} {...linkProps}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 30, width: 44, flex: "0 0 44px", textAlign: "center", lineHeight: 1 }}>
                 {rank}
                 <small style={{
@@ -135,7 +137,7 @@ export default function RankingsPage({ spots, ranked, weeklyWinner }) {
                   <div style={{ display: "block", height: "100%", background: "var(--yellow)", width: total > 0 ? `${Math.round((spot.wins / total) * 100)}%` : "0%" }} />
                 </div>
               </div>
-            </div>
+            </Row>
           );
         })}
 
