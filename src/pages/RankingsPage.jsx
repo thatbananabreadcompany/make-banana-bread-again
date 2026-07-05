@@ -27,11 +27,13 @@ function moveFor(spot) {
   return { type: h % 2 === 0 ? "up" : "down", n: (h % 3) + 1 };
 }
 
-function isoWeek(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+// MBBA launched June 13, 2026 — "week" counts weeks since launch, not the
+// calendar's ISO week of the year (which would read as "week 27" the day
+// after launch and make the game look years older than it is).
+const LAUNCH_DATE = new Date("2026-06-13T00:00:00Z");
+function weeksSinceLaunch(date) {
+  const days = Math.floor((date - LAUNCH_DATE) / 86400000);
+  return Math.max(1, Math.floor(days / 7) + 1);
 }
 
 export default function RankingsPage({ spots, ranked, weeklyWinner, onGoHome }) {
@@ -67,14 +69,14 @@ export default function RankingsPage({ spots, ranked, weeklyWinner, onGoHome }) 
     <div className="mbba">
       <Ticker
         items={[
-          `Week ${isoWeek(new Date())} standings are live`,
+          `Week ${weeksSinceLaunch(new Date())} standings are live`,
           mover ? `Biggest mover · ${mover.spot.name} up ${mover.move.n}` : null,
           champBase ? `${champBase.name} defends the belt` : null,
         ]}
       />
       <header className="mbba-top">
         <button className="mbba-brand" onClick={onGoHome} aria-label="Back to home">MBBA <em>standings</em></button>
-        <span className="mbba-badge plain">WK {isoWeek(new Date())}</span>
+        <span className="mbba-badge plain">WK {weeksSinceLaunch(new Date())}</span>
       </header>
 
       <main className="mbba-stage" style={{ paddingTop: 6 }}>
